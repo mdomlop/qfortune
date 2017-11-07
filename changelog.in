@@ -1,0 +1,6 @@
+qfortune (0.1a) unstable; urgency=medium
+
+  * Release 0.1a.
+    + Translation from tk to Qt.
+
+ -- Manuel Domínguez López <mdomlop@gmail.com>  Tue, 17 Nov 2017 19:28:10 +0100

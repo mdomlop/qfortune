@@ -1,0 +1,31 @@
+# Maintainer: Manuel Domínguez López <mdomlop at gmail dot com>
+
+_pkgver_year=2017
+_pkgver_month=11
+_pkgver_day=07
+
+_gitname=qfortune
+pkgname=${_gitname}-git
+pkgver=local
+pkgrel=1
+pkgdesc="A pyQT5 interface for reading fortune cookies."
+url="https://github.com/mdomlop/${_gitname}"
+source=("${_gitname}.tar")
+md5sums=('SKIP')
+license=('GPL3')
+depends=('python>=3', 'fortune-mod')
+makedepends=('gettext')
+optdepends=('fortune-mod-es: Fortune Cookies in Spanish')
+arch=('any')
+provides=($_gitname)
+conflicts=(${_gitname})
+
+build() {
+    cd "${srcdir}/${_gitname}"
+    make
+    }
+
+package() {
+    cd "${srcdir}/${_gitname}"
+    make install DESTDIR=${pkgdir}
+}

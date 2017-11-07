@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=QFortune
+Exec=qfortune
+Icon=qfortune
+Categories=Game;
+Terminal=false
+Type=Application

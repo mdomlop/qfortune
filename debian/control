@@ -1,0 +1,14 @@
+Source: qfortune
+Section: games
+Priority: optional
+Maintainer: Manuel Domínguez López <mdomlop@gmail.com>
+Build-Depends: debhelper (>= 9), pandoc
+Standards-Version: 3.9.8
+Homepage: https://github.com/mdomlop/qfortune
+
+Package: qfortune
+Architecture: all
+Provides: qfortune
+Conflicts: qfortune-git
+Depends: python3 (>= 3.5), fortune-mod, python-pyqt5 (>=5.7)
+Description: A fortune interface in pyQt5.
