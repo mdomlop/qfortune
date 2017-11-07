@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# QFortune: A pyQT5 interface for reading fortune cookies.
+# QFortune: A pyQt5 interface for reading fortune cookies.
 # License: GPLv3+
 # Author: Manuel Domínguez López
 # Date: 2017
@@ -14,7 +14,7 @@ import os
 import gettext
 
 PROGRAM_NAME = 'qfortune'
-DESCRIPTION = 'A pyQT5 interface for reading fortune cookies'
+DESCRIPTION = 'A pyQt5 interface for reading fortune cookies'
 VERSION = '0.1b'
 AUTHOR = 'Manuel Domínguez López'  # See AUTHORS file
 MAIL = 'mdomlop@gmail.com'
