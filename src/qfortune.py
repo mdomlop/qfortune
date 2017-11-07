@@ -25,6 +25,11 @@ saved = []  # Saved cookies merged from savefile and fortune.
 savefile = os.getenv("HOME") + '/qfortune.cookies'
 
 
+def decrypt(s):  # Unix offensive fortunes are rot13 encoded
+    rot13 = str.maketrans(
+        'ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz', 'NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm')
+    return(str.translate(s, rot13))
+
 def loaddb():
     try:  # Populate saved with
         with open(savefile, 'r') as loadsaved:
