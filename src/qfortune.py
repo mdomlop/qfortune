@@ -15,29 +15,38 @@ import gettext
 
 PROGRAM_NAME = 'qfortune'
 DESCRIPTION = 'A pyQt5 interface for reading fortune cookies'
-VERSION = '0.1b'
+VERSION = '0.2a'
 AUTHOR = 'Manuel Domínguez López'  # See AUTHORS file
 MAIL = 'mdomlop@gmail.com'
 LICENSE = 'GPLv3+'  # Read LICENSE file.
 
-fortune = []  # Temp database containing fortune cookies
+epigrams = []  # Temp database containing fortune cookies
 saved = []  # Saved cookies merged from savefile and fortune.
 savefile = os.getenv("HOME") + '/qfortune.cookies'
 
+fortunes = []
+fortunes_off = []
+
+'''
+~/.config/qfortune/fortune/off/
+~/.config/qfortune/fortune/
+~/.config/qfortune/qfortune.cookies
+~/.config/qfortune/qfortunerc
+'''
 
 def decrypt(s):  # Unix offensive fortunes are rot13 encoded
     rot13 = str.maketrans(
         'ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz', 'NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm')
     return(str.translate(s, rot13))
 
-def loaddb():
-    try:  # Populate saved with
-        with open(savefile, 'r') as loadsaved:
-            text = loadsaved.read()
+def loaddb(path, off=False):
+    try:  # Populate epigrams with a fortune database file
+        with open(path, 'r') as f:
+            text = f.read()
 
         for line in text.split('\n%\n'):
-            saved.append(line)  # Do not line.strip() for match with original
-        loadsaved.close()
+            epigrams.append(line)  # Do not line.strip() for match with original
+        f.close()
     except FileNotFoundError:
         QMessageBox.information(w, _('QFortune: Information'),
                                 _('No database file was found.<p>')
@@ -51,12 +60,10 @@ def loaddb():
                                 _('The database file: <p><pre>')
                                 + savefile
                                 + _('</pre><p>is a directory.<p>')
-                                + _('It will be a read/write file.'))
+                                + _('It will be a file.'))
         sys.exit()
     except Exception as e:
         fatal_exception(e.errno, e.strerror)
-    except AttributeError:
-        fatal_exception(1, e.strerror)
 
 def fixpermissions():
     buttonReply = QMessageBox.question(w, _('QFortune: Question'),
@@ -83,11 +90,11 @@ def fixpermissions():
 
 
 def printcookie(i=-1):
-    txt.setText(fortune[i])
+    txt.setText(epigrams[i])
 
 def func_btn_new():
     global current
-    cookie = subprocess.getoutput('fortune')
+    cookie = epigrams.pop()
     fortune.append(cookie)
     index = len(fortune) - 1
     current = index
@@ -214,6 +221,7 @@ grid.addWidget(btn_exit, 1, 4)
 def main():
     global current
     loaddb()
+
     w.setWindowTitle('QFortune')
     w.setWindowIcon(QIcon.fromTheme('qfortune'))
     w.resize(500, 200)
