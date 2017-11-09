@@ -10,5 +10,5 @@ Package: qfortune
 Architecture: all
 Provides: qfortune
 Conflicts: qfortune-git
-Depends: python3 (>= 3.5), fortune-mod, python-pyqt5 (>=5.7)
+Depends: python3 (>= 3.5), python-pyqt5 (>=5.7)
 Description: A fortune interface in pyQt5.
