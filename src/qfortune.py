@@ -1,1 +1,332 @@
-#!/usr/bin/env python3# QFortune: A pyQt5 interface for reading fortune cookies.# License: GPLv3+# Author: Manuel Domínguez López# Date: 2017import sysfrom PyQt5.QtWidgets import *from PyQt5.QtGui import *from PyQt5.QtCore import *import osimport gettextimport randomPROGRAM_NAME = 'qfortune'DESCRIPTION = 'A pyQt5 interface for reading fortune cookies'VERSION = '0.2a'AUTHOR = 'Manuel Domínguez López'  # See AUTHORS fileMAIL = 'mdomlop@gmail.com'LICENSE = 'GPLv3+'  # Read LICENSE file.epigrams = []  # Temp database containing fortune cookiesreaded = []  # Readed cookiessaved = []  # Saved cookies merged from savefile and fortune.savefile = os.path.join(os.getenv('HOME'), '.config/qfortune/qfortune.cookies')fortunes = '/usr/share/qfortune/fortunes'fortunes_off = '/usr/share/qfortune/fortunes/off'custom_fortunes = os.path.join(os.getenv("HOME"), '.config/qfortune/fortunes')custom_fortunes_off = os.path.join(os.getenv("HOME"),                        '.config/qfortune/fortunes/off')'''~/.config/qfortune/fortunes/off/~/.config/qfortune/fortunes/~/.config/qfortune/qfortune.cookies~/.config/qfortune/qfortunercoff'''def decrypt(s):  # Unix offensive fortunes are rot13 encoded    rot13 =str.maketrans(        'ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz',        'NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm')    return(str.translate(s, rot13))def loaddb(directory, offensive=False):    try:        files = os.listdir(directory)    except:        files = []    if files:  # Not empty        files = list(map(lambda x: os.path.join(directory, x), files))    for f in files:  # Loads to epigrams        if os.path.isfile(f):            if offensive:                loadfile(f, True)            else:                loadfile(f)        else:            print(f, _('is not a regular file.'))def loadfile(path, decode=False):    try:  # Populate epigrams with a fortune database file        with open(path, 'r') as f:            text = f.read()        for line in text.split('\n%\n'):            if decode:                line = decrypt(line)            epigrams.append(line)  # Do not line.strip() for match with original        f.close()    except PermissionError:        fixpermissions()def fixpermissions():    buttonReply = QMessageBox.question(w, _('QFortune: Question'),                            _('The database file: <p><pre>')                            + savefile                            + _('</pre><p>has incorrect permissions.<p>')                            + _('It will be a read/write file.<p>')                            + _('Do you want me to try to fix them?'),                            QMessageBox.Yes | QMessageBox.No,                            QMessageBox.Yes)    if buttonReply == QMessageBox.Yes:        try:            os.chmod(savefile, 0o644)            QMessageBox.information(w, _('QFortune: Information'),                                    _('Permissions fixed successfully'))        except Exception as e:            QMessageBox.warning(w, _('QFortune: Warning'),                                    _('I can not fix permissions.')                                    + _('<p>Error: <b>') + str(e.errno)                                    + _('</b><p>(<i>') + e.strerror                                    + _('</i>)<p><b>You must fix it manually.</b>')                                    + _("<p><p>You can't save the cookie."))            btn_save.setEnabled(False)def printcookie(i=-1):    txt.setText(epigrams[i])def func_btn_new():    global current    cookie = epigrams.pop()    readed.append(cookie)    index = len(readed) - 1    current = index    printcookie()    settitle(current)    disablebuttons(readed[current])  # Prevent repetitiondef func_btn_prev():    global current    if current == 0:        current = len(readed) - 1    else:        current = current - 1    printcookie(current)    settitle(current)    disablebuttons(readed[current])def func_btn_next():    global current    if current == len(readed) - 1:        current = 0    else:        current = current + 1    printcookie(current)    settitle(current)    disablebuttons(readed[current])def func_btn_save():    cookie = readed[current]    formatcookie = readed[current] + '\n%\n'    if cookie not in saved:        try:            with open(savefile, 'a') as mysavefile:                mysavefile.write(formatcookie)            saved.append(cookie)            disablebuttons(cookie)        except PermissionError:            fixpermissions()        except Exception as e:            fatal_exception(e.errno, e.strerror)def fatal_exception(errorcode, errortext):    QMessageBox.critical(w, _('QFortune: Critical error'),                            _('An unexpected error has happened.<p>')                            + _('Error code: <b>') + str(errorcode)                            + _('</b><p>')                            + _('Error message: <i>') + errortext                            + _('</i><p><p>The program will close.'))    sys.exit(exitcode)def func_btn_exit():    QCoreApplication.instance().quit()def settitle(index):    title = _('QFortune:') + ' ' + str(index + 1)    w.setWindowTitle(title)def disablebuttons(cookie):    # Save button:    if cookie in saved:        btn_save.setEnabled(False)    else:        btn_save.setEnabled(True)        btn_save.setIcon(QIcon.fromTheme('document-save'))        btn_save.setToolTip(_('Save the cookie in your database file'))        btn_save.setText(_('Save'))    # Prev button:    if len(readed) == 1:        btn_prev.setEnabled(False)        btn_next.setEnabled(False)    else:        btn_prev.setEnabled(True)        btn_next.setEnabled(True)def center_window(w):    # get screen width and height    resolution = QDesktopWidget().screenGeometry()    w.move((resolution.width() / 2) - (w.frameSize().width() / 2),           (resolution.height() / 2) - (w.frameSize().height() / 2))gettext.translation('qfortune', localedir='/usr/share/locale', fallback=True).install()app = QApplication(sys.argv)w = QWidget()txt = QTextEdit()txt.setReadOnly(True)btn_new = QPushButton(_('New cookie'), w, default=True)btn_new.setIcon(QIcon.fromTheme('document-new'))btn_new.setToolTip(_('Show new cookie'))btn_new.clicked.connect(func_btn_new)btn_next = QPushButton(_('Next'), w)btn_next.setIcon(QIcon.fromTheme('go-next'))btn_next.setToolTip(_('Show next cookie if available'))btn_next.clicked.connect(func_btn_next)btn_prev = QPushButton(_('Previous'), w)btn_prev.setIcon(QIcon.fromTheme('go-previous'))btn_prev.setToolTip(_('Show previous cookie if available'))btn_prev.clicked.connect(func_btn_prev)btn_save = QPushButton(_('Save'), w)btn_save.setIcon(QIcon.fromTheme('document-save'))btn_save.setToolTip(_('Save the cookie in your database file'))btn_save.clicked.connect(func_btn_save)btn_exit = QPushButton(_('Exit'), w)btn_exit.setIcon(QIcon.fromTheme('window-close'))btn_exit.setToolTip(_('Exit program'))btn_exit.clicked.connect(func_btn_exit)grid = QGridLayout()grid.addWidget(txt, 0, 0, 1, 5)grid.addWidget(btn_new, 1, 0)grid.addWidget(btn_prev, 1, 1)grid.addWidget(btn_next, 1, 2)grid.addWidget(btn_save, 1, 3)grid.addWidget(btn_exit, 1, 4)def main():    global current    for i in fortunes, custom_fortunes:        loaddb(i)    for i in fortunes_off, custom_fortunes_off:        loaddb(i, True)    w.setWindowTitle('QFortune')    w.setWindowIcon(QIcon.fromTheme('qfortune'))    w.resize(500, 200)    center_window(w)    w.setLayout(grid)    w.show()    func_btn_new()    sys.exit(app.exec_())if __name__ == '__main__':    main()
+#!/usr/bin/env python3
+# QFortune: A pyQt5 interface for reading fortune cookies.
+# License: GPLv3+
+# Author: Manuel Domínguez López
+# Date: 2017
+
+
+import sys
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+import os
+import gettext
+import random
+import functools
+
+PROGRAM_NAME = 'qfortune'
+DESCRIPTION = 'A pyQt5 interface for reading fortune cookies'
+VERSION = '0.2a'
+AUTHOR = 'Manuel Domínguez López'  # See AUTHORS file
+MAIL = 'mdomlop@gmail.com'
+LICENSE = 'GPLv3+'  # Read LICENSE file.
+
+savefile = os.path.join(os.getenv('HOME'), '.config/qfortune/qfortune.cookies')
+epigrams = {}  # Database containing all fortune cookies
+elist = []  # Only a list for random access to epigrams dict.
+saved = []  # Saved cookies merged from savefile and fortune.
+statics = {}
+
+fortunes = '/usr/share/qfortune/fortunes'
+fortunes_off = '/usr/share/qfortune/fortunes/off'
+custom_fortunes = os.path.join(os.getenv("HOME"), '.config/qfortune/fortunes')
+custom_fortunes_off = os.path.join(os.getenv("HOME"),
+                        '.config/qfortune/fortunes/off')
+
+'''
+~/.config/qfortune/fortunes/off/
+~/.config/qfortune/fortunes/
+~/.config/qfortune/qfortune.cookies
+~/.config/qfortune/qfortunerc
+
+off
+'''
+
+def decrypt(s):  # Unix offensive fortunes are rot13 encoded
+    rot13 =str.maketrans(
+        'ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz',
+        'NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm')
+    return(str.translate(s, rot13))
+
+def loaddb(directory, offensive=False):
+    try:
+        files = os.listdir(directory)
+    except:
+        files = []
+
+    if files:  # Not empty
+        files = list(map(lambda x: os.path.join(directory, x), files))
+    for f in files:  # Loads to epigrams
+        if os.path.isfile(f):
+            if offensive:
+                loadfile(f, True)
+            else:
+                loadfile(f)
+        elif os.path.isdir(f):
+            pass
+        else:
+            print(f, _('is not a regular file.'))
+
+def loadfile(path, decode=False):
+    n = 0  # Count entries
+    try:  # Populate epigrams with a fortune database file
+        with open(path, 'r') as f:
+            text = f.read()
+
+        for line in text.split('\n%\n'):
+            if line:
+                n += 1
+                if decode:
+                    line = decrypt(line)
+                epigrams.update({line: (line, path, decode)})
+        f.close()
+        statics.update({path: (n, decode)})
+    except PermissionError:
+        fixpermissions()
+
+
+def fixpermissions():
+    buttonReply = QMessageBox.question(w, _('QFortune: Question'),
+                            _('The database file: <p><pre>')
+                            + savefile
+                            + _('</pre><p>has incorrect permissions.<p>')
+                            + _('It will be a read/write file.<p>')
+                            + _('Do you want me to try to fix them?'),
+                            QMessageBox.Yes | QMessageBox.No,
+                            QMessageBox.Yes)
+    if buttonReply == QMessageBox.Yes:
+        try:
+            os.chmod(savefile, 0o644)
+            QMessageBox.information(w, _('QFortune: Information'),
+                                    _('Permissions fixed successfully'))
+        except Exception as e:
+            QMessageBox.warning(w, _('QFortune: Warning'),
+                                    _('I can not fix permissions.')
+                                    + _('<p>Error: <b>') + str(e.errno)
+                                    + _('</b><p>(<i>') + e.strerror
+                                    + _('</i>)<p><b>You must fix it manually.</b>')
+                                    + _("<p><p>You can't save the cookie."))
+            btnSave.setEnabled(False)
+
+
+def showCookie():
+    global cookie
+    global index
+    global statics
+    cookie = epigrams[elist[index]][0]
+    path = epigrams[elist[index]][1]
+    off = epigrams[elist[index]][2]
+    if off:
+        off = _('(Offensive) ')
+    else:
+        off = ''
+    txt.setText(cookie)
+    disablebuttons()
+    settitle()
+    sb.showMessage(off + os.path.basename(path) + ': ' + str(index + 1) + '/' + str(len(elist)) + ' ' + str(statics[path][0]))
+
+def funcBtnNext():
+    global index
+    index += 1
+    if index >= len(elist):
+        index = 0  # Go to the beginning
+    showCookie()
+
+def funcBtnPrev():
+    global index
+    index -= 1
+    if index < 0:
+        index = len(elist) - 1  # Go to the end
+    showCookie()
+
+def funcBtnSave():
+    formatcookie = cookie + '\n%\n'
+    if cookie not in saved:
+        try:
+            with open(savefile, 'a') as f:
+                f.write(formatcookie)
+        except PermissionError:
+            fixpermissions()
+        except Exception as e:
+            fatal_exception(e.errno, e.strerror)
+        f.close()
+        saved.append(cookie)
+        btnSave.setEnabled(False)
+
+def fatal_exception(errorcode, errortext):
+    QMessageBox.critical(w, _('QFortune: Critical error'),
+                            _('An unexpected error has happened.<p>')
+                            + _('Error code: <b>') + str(errorcode)
+                            + _('</b><p>')
+                            + _('Error message: <i>') + errortext
+                            + _('</i><p><p>The program will close.'))
+    sys.exit(exitcode)
+
+def funcBtnExit():
+    QCoreApplication.instance().quit()
+
+def settitle():
+    title = _('QFortune:') + ' ' + str(index + 1)
+    w.setWindowTitle(title)
+
+def disablebuttons():
+    # Save button:
+    if cookie in saved:
+        btnSave.setEnabled(False)
+    else:
+        btnSave.setEnabled(True)
+
+def center_window(w):
+    # get screen width and height
+
+    resolution = QDesktopWidget().screenGeometry()
+    w.move((resolution.width() / 2) - (w.frameSize().width() / 2),
+           (resolution.height() / 2) - (w.frameSize().height() / 2))
+
+def switchVisibility(widget):
+    if widget.isVisible():
+        widget.hide()
+    else:
+        widget.show()
+
+gettext.translation('qfortune', localedir='/usr/share/locale',
+fallback=True).install()
+
+aboutappstr = _('<b>QFortune:</b> ') + _(DESCRIPTION) + '<p>'
+aboutappstr +=  _('<b>Version:</b> ') + VERSION + '<p>'
+aboutappstr +=  _('<b>Author:</b> ') + AUTHOR
+aboutappstr += " <a href='mailto:" + MAIL + "'>email</a>" + '<p>'
+aboutappstr +=  _('<b>License:</b> ') + LICENSE
+
+app = QApplication(sys.argv)
+w = QWidget()
+
+txt = QTextEdit()
+txt.setReadOnly(True)
+
+btnNext = QPushButton(_('Next'), w)
+btnNext.setIcon(QIcon.fromTheme('go-next'))
+btnNext.setToolTip(_('Show next cookie if available'))
+btnNext.clicked.connect(funcBtnNext)
+
+btnPrev = QPushButton(_('Previous'), w)
+btnPrev.setIcon(QIcon.fromTheme('go-previous'))
+btnPrev.setToolTip(_('Show previous cookie if available'))
+btnPrev.clicked.connect(funcBtnPrev)
+
+btnSave = QPushButton(_('Save'), w)
+btnSave.setIcon(QIcon.fromTheme('document-save'))
+btnSave.setToolTip(_('Save the cookie in your database file'))
+btnSave.clicked.connect(funcBtnSave)
+
+btnExit = QPushButton(_('Exit'), w)
+btnExit.setIcon(QIcon.fromTheme('window-close'))
+btnExit.setToolTip(_('Exit program'))
+btnExit.clicked.connect(funcBtnExit)
+
+sb = QStatusBar()
+sb.hide()
+
+mainMenu = QMenuBar()
+
+
+grid = QGridLayout()
+grid.addWidget(mainMenu, 0, 0, 1, 4)
+
+grid.addWidget(txt, 1, 0, 1, 4)
+grid.addWidget(btnPrev, 2, 0)
+grid.addWidget(btnNext, 2, 1)
+grid.addWidget(btnSave, 2, 2)
+grid.addWidget(btnExit, 2, 3)
+grid.addWidget(sb, 3, 0, 1, 4)
+
+aa = QWidget()
+aa.setWindowTitle(_('About QFortune'))
+aa.setWindowIcon(QIcon.fromTheme('qfortune'))
+aa.resize(400, 300)
+center_window(aa)
+aaTxt = QLabel()
+aaTxt.setText(aboutappstr)
+aaBtnExit = QPushButton(_('Exit'), aa)
+aaBtnExit.setIcon(QIcon.fromTheme('window-close'))
+aaBtnExit.setToolTip(_('Exit program'))
+aaBtnExit.clicked.connect(aa.close)
+aaGrid = QGridLayout()
+aaGrid.addWidget(aaTxt, 0, 0, 1, 2)
+aaGrid.addWidget(aaBtnExit, 1, 1)
+aa.setLayout(aaGrid)
+
+
+# MENU CONFIGURATION
+fileMenu = mainMenu.addMenu(_('File'))
+actNext = QAction(QIcon.fromTheme('go-next'), _('Next cookie'))
+actNext.setShortcut('Ctrl+Right')
+actNext.setStatusTip(_('Show next cookie if available'))
+actNext.triggered.connect(funcBtnNext)
+fileMenu.addAction(actNext)
+actPrev = QAction(QIcon.fromTheme('go-previous'), _('Next cookie'))
+actPrev.setShortcut('Ctrl+Left')
+actPrev.setStatusTip(_('Show previous cookie if available'))
+actPrev.triggered.connect(funcBtnPrev)
+fileMenu.addAction(actPrev)
+actSave = QAction(QIcon.fromTheme('document-save'), _('Save'))
+actSave.setShortcut('Ctrl+S')
+actSave.setStatusTip(_('Save epigram to database'))
+actSave.triggered.connect(funcBtnSave)
+fileMenu.addAction(actSave)
+
+actExit = QAction(QIcon.fromTheme('window-close'), _('Exit'))
+actExit.setShortcut('Ctrl+Q')
+actExit.setStatusTip(_('Exit application'))
+actExit.triggered.connect(funcBtnExit)
+fileMenu.addAction(actExit)
+
+editMenu = mainMenu.addMenu('Edit')
+actEditSaved = QAction(QIcon.fromTheme('document-edit'), _('Edit saved database'))
+actEditSaved.setShortcut('F2')
+editMenu.addAction(actEditSaved)
+
+viewMenu = mainMenu.addMenu('View')
+actShowSB = QAction(QIcon.fromTheme('kt-show-statusbar'), _('Show/Hide status bar'))
+actShowSB.setShortcut('F5')
+actShowSB.triggered.connect(functools.partial(switchVisibility, sb))
+viewMenu.addAction(actShowSB)
+
+searchMenu = mainMenu.addMenu('Tools')
+toolsMenu = mainMenu.addMenu('Preferences')
+
+helpMenu = mainMenu.addMenu(_('Help'))
+actShowAboutApp = QAction(QIcon.fromTheme('qfortune'), _('About QFortune'))
+actShowAboutApp.setStatusTip(_('Show info about this program'))
+actShowAboutApp.triggered.connect(aa.show)
+helpMenu.addAction(actShowAboutApp)
+
+
+def main():
+    global index
+    global elist
+    global cookie
+
+    index = -1
+
+    for i in fortunes, custom_fortunes:
+        loaddb(i)
+    for i in fortunes_off, custom_fortunes_off:
+        loaddb(i, True)
+
+    elist = list(epigrams.keys())
+
+    #random.shuffle(elist)
+
+    w.setWindowTitle('QFortune')
+    w.setWindowIcon(QIcon.fromTheme('qfortune'))
+    w.resize(500, 200)
+    center_window(w)
+    w.addAction(actShowSB)
+    w.setLayout(grid)
+    w.show()
+    funcBtnNext()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
