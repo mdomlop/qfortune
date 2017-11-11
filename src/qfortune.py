@@ -1,332 +1,379 @@
-#!/usr/bin/env python3
-# QFortune: A pyQt5 interface for reading fortune cookies.
-# License: GPLv3+
-# Author: Manuel Domínguez López
-# Date: 2017
+#!/usr/bin/python3
 
-
-import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtCore import (QFile, QFileInfo, QPoint, QRect, QSettings, QSize,
+        Qt, QTextStream, QT_VERSION_STR)
+from PyQt5.QtGui import QIcon, QKeySequence, QFont
+from PyQt5.QtWidgets import (QWidget, QDialog, QAction, QApplication, QFileDialog, QMainWindow, QLabel, QLineEdit, QTabWidget, QGridLayout, QVBoxLayout, QHBoxLayout,
+        QMessageBox, QTextEdit, QPushButton)
 import os
-import gettext
 import random
-import functools
+import gettext
 
-PROGRAM_NAME = 'qfortune'
-DESCRIPTION = 'A pyQt5 interface for reading fortune cookies'
-VERSION = '0.2a'
-AUTHOR = 'Manuel Domínguez López'  # See AUTHORS file
-MAIL = 'mdomlop@gmail.com'
-LICENSE = 'GPLv3+'  # Read LICENSE file.
+PROGRAM_NAME = "qfortune"
+DESCRIPTION = "A pyQt5 interface for reading fortune cookies"
+VERSION = "0.2a"
+AUTHOR = "Manuel Domínguez López"  # See AUTHORS file
+MAIL = "mdomlop@gmail.com"
+LICENSE = "GPLv3+"  # Read LICENSE file.
 
-savefile = os.path.join(os.getenv('HOME'), '.config/qfortune/qfortune.cookies')
-epigrams = {}  # Database containing all fortune cookies
-elist = []  # Only a list for random access to epigrams dict.
-saved = []  # Saved cookies merged from savefile and fortune.
-statics = {}
-
-fortunes = '/usr/share/qfortune/fortunes'
-fortunes_off = '/usr/share/qfortune/fortunes/off'
-custom_fortunes = os.path.join(os.getenv("HOME"), '.config/qfortune/fortunes')
+fortunes = "/usr/share/qfortune/fortunes"
+fortunes_off = "/usr/share/qfortune/fortunes/off"
+custom_fortunes = os.path.join(os.getenv("HOME"), ".config/qfortune/fortunes")
 custom_fortunes_off = os.path.join(os.getenv("HOME"),
-                        '.config/qfortune/fortunes/off')
+                        ".config/qfortune/fortunes/off")
+savefile = os.path.join(os.getenv("HOME"), ".config/qfortune/favorites.cookies")
 
-'''
-~/.config/qfortune/fortunes/off/
-~/.config/qfortune/fortunes/
-~/.config/qfortune/qfortune.cookies
-~/.config/qfortune/qfortunerc
+class AboutDialog(QDialog):
+    def __init__(self, parent=None):
+        super(AboutDialog, self).__init__(parent)
 
-off
-'''
+        font = QFont()
+        font.setPointSize(18);
+        font.setBold(False)
+        labelIcon = QLabel()
+        pixmap = QIcon.fromTheme('qfortune').pixmap(QSize(64, 64))
+        labelIcon.setPixmap(pixmap)
+        labelText = QLabel("QFortune")
+        labelText.setFont(font)
 
-def decrypt(s):  # Unix offensive fortunes are rot13 encoded
-    rot13 =str.maketrans(
-        'ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz',
-        'NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm')
-    return(str.translate(s, rot13))
+        tabWidget = QTabWidget()
+        tabWidget.addTab(AboutTab(), "About")
+        tabWidget.addTab(VersionTab(), "Version")
+        tabWidget.addTab(AuthorsTab(), "Authors")
+        tabWidget.addTab(ThanksTab(), "Thanks")
+        tabWidget.addTab(TranslationTab(), "Translation")
 
-def loaddb(directory, offensive=False):
-    try:
-        files = os.listdir(directory)
-    except:
-        files = []
 
-    if files:  # Not empty
-        files = list(map(lambda x: os.path.join(directory, x), files))
-    for f in files:  # Loads to epigrams
-        if os.path.isfile(f):
-            if offensive:
-                loadfile(f, True)
+        btn = QPushButton("Close", self)
+        btn.setIcon(QIcon.fromTheme("window-close"))
+        btn.setToolTip("Close this dialog")
+        btn.clicked.connect(self.close)
+
+        labelLayout = QHBoxLayout()
+        labelLayout.addWidget(labelIcon)
+        labelLayout.addWidget(labelText, Qt.AlignLeft)
+
+        mainLayout = QGridLayout()
+        mainLayout.addLayout(labelLayout, 0, 0)
+        mainLayout.addWidget(tabWidget, 1, 0)
+        mainLayout.addWidget(btn, 2, 0, Qt.AlignRight)
+        self.setLayout(mainLayout)
+
+        self.setWindowTitle("About QFortune")
+        self.setWindowIcon(QIcon.fromTheme('qfortune'))
+
+
+class AboutTab(QWidget):
+    def __init__(self, parent=None):
+        super(AboutTab, self).__init__(parent)
+
+        blank = QLabel()
+        description = QLabel("A pyQt5 interface for reading fortune cookies")
+        copyright = QLabel("© 2017, Manuel Domínguez López")
+        source = QLabel("<a href='https://github.com/mdomlop/qfortune'>github</a>")
+        license= QLabel("<a href='https://www.gnu.org/licenses/gpl-3.0.en.html'>GPLv3+</a>")
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(description)
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(copyright)
+        mainLayout.addWidget(license)
+        mainLayout.addStretch()
+        self.setLayout(mainLayout)
+
+
+class VersionTab(QWidget):
+    def __init__(self, parent=None):
+        super(VersionTab, self).__init__(parent)
+
+        version = QLabel("<b>Version 0.1a<b>")
+        using = QLabel("Usando:")
+        pyver = ".".join((
+            str(sys.version_info[0]),
+            str(sys.version_info[1]),
+            str(sys.version_info[2])))
+        python = QLabel("<ul><li>Python " + pyver)
+        pyqt = QLabel("<ul><li>PyQt " + QT_VERSION_STR)
+
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(version)
+        mainLayout.addWidget(using)
+        mainLayout.addWidget(python)
+        mainLayout.addWidget(pyqt)
+        mainLayout.addStretch(1)
+        self.setLayout(mainLayout)
+
+class AuthorsTab(QWidget):
+    def __init__(self, parent=None):
+        super(AuthorsTab, self).__init__(parent)
+
+        blank = QLabel()
+        notice = QLabel("Mail me if you found bugs.")
+        name1 = QLabel("<b>Manuel Domínguez López<b>")
+        task1 = QLabel("<i>Principle author</i>")
+        mail1 = QLabel("<pre>mdomlop@gmail.com</pre>")
+
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(notice)
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(name1)
+        mainLayout.addWidget(task1)
+        mainLayout.addWidget(mail1)
+        mainLayout.addStretch(1)
+        self.setLayout(mainLayout)
+
+class ThanksTab(QWidget):
+    def __init__(self, parent=None):
+        super(ThanksTab, self).__init__(parent)
+
+        blank = QLabel()
+        notice = QLabel("Thank you for using my program.")
+
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(notice)
+        mainLayout.addStretch(1)
+        self.setLayout(mainLayout)
+
+class TranslationTab(QWidget):
+    def __init__(self, parent=None):
+        super(TranslationTab, self).__init__(parent)
+
+        blank = QLabel()
+        notice = QLabel("Please, mail me if you want to improve a translation.")
+        name1 = QLabel("<b>Manuel Domínguez López<b>")
+        task1 = QLabel("<i>Spanish and english translation</i>")
+        mail1 = QLabel("<pre>mdomlop@gmail.com</pre>")
+
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(notice)
+        mainLayout.addWidget(blank)
+        mainLayout.addWidget(name1)
+        mainLayout.addWidget(task1)
+        mainLayout.addWidget(mail1)
+        mainLayout.addStretch(1)
+        self.setLayout(mainLayout)
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+
+        self.epigrams = {}  # Database containing all fortune cookies
+        self.elist = []  # Only a list for random access to epigrams dict.
+        self.saved = []  # Saved cookies merged from savefile and fortune.
+        self.statics = {}
+
+        self.loadDir(fortunes)
+        self.loadDir(custom_fortunes)
+        self.loadDir(fortunes_off, True)
+        self.loadDir(custom_fortunes_off, True)
+        self.elist = list(self.epigrams.keys())
+        self.nepigrams = len(self.elist)
+        # random.shuffle(elist)
+        self.cookie = 'unix'
+
+        self.index = -1
+
+        self.textEdit = QTextEdit()
+        self.textEdit.setReadOnly(True)
+        self.setCentralWidget(self.textEdit)
+
+        self.createActions()
+        self.createMenus()
+        self.createToolBars()
+        self.nextFile()
+        self.createStatusBar('unix')
+
+        self.readSettings()
+
+    def decrypt(self, s):  # Unix offensive fortunes are rot13 encoded
+        rot13 =str.maketrans(
+            "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
+            "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
+        return(str.translate(s, rot13))
+
+    def loadDir(self, directory, offensive=False):
+        try:
+            files = os.listdir(directory)
+        except:
+            files = []
+
+        if files:  # Not empty
+            files = list(map(lambda x: os.path.join(directory, x), files))
+        for f in files:  # Loads to epigrams
+            if os.path.isfile(f):
+                if offensive:
+                    self.loadFile(f, True)
+                else:
+                    self.loadFile(f)
+            elif os.path.isdir(f):
+                pass
             else:
-                loadfile(f)
-        elif os.path.isdir(f):
-            pass
-        else:
-            print(f, _('is not a regular file.'))
+                print(f, _("is not a regular file."))
 
-def loadfile(path, decode=False):
-    n = 0  # Count entries
-    try:  # Populate epigrams with a fortune database file
-        with open(path, 'r') as f:
-            text = f.read()
+    def loadFile(self, path, decode=False):
+        n = 0  # Count entries
+        try:  # Populate epigrams with a fortune database file
+            with open(path, "r") as f:
+                text = f.read()
 
-        for line in text.split('\n%\n'):
-            if line:
-                n += 1
-                if decode:
-                    line = decrypt(line)
-                epigrams.update({line: (line, path, decode)})
-        f.close()
-        statics.update({path: (n, decode)})
-    except PermissionError:
-        fixpermissions()
-
-
-def fixpermissions():
-    buttonReply = QMessageBox.question(w, _('QFortune: Question'),
-                            _('The database file: <p><pre>')
-                            + savefile
-                            + _('</pre><p>has incorrect permissions.<p>')
-                            + _('It will be a read/write file.<p>')
-                            + _('Do you want me to try to fix them?'),
-                            QMessageBox.Yes | QMessageBox.No,
-                            QMessageBox.Yes)
-    if buttonReply == QMessageBox.Yes:
-        try:
-            os.chmod(savefile, 0o644)
-            QMessageBox.information(w, _('QFortune: Information'),
-                                    _('Permissions fixed successfully'))
-        except Exception as e:
-            QMessageBox.warning(w, _('QFortune: Warning'),
-                                    _('I can not fix permissions.')
-                                    + _('<p>Error: <b>') + str(e.errno)
-                                    + _('</b><p>(<i>') + e.strerror
-                                    + _('</i>)<p><b>You must fix it manually.</b>')
-                                    + _("<p><p>You can't save the cookie."))
-            btnSave.setEnabled(False)
-
-
-def showCookie():
-    global cookie
-    global index
-    global statics
-    cookie = epigrams[elist[index]][0]
-    path = epigrams[elist[index]][1]
-    off = epigrams[elist[index]][2]
-    if off:
-        off = _('(Offensive) ')
-    else:
-        off = ''
-    txt.setText(cookie)
-    disablebuttons()
-    settitle()
-    sb.showMessage(off + os.path.basename(path) + ': ' + str(index + 1) + '/' + str(len(elist)) + ' ' + str(statics[path][0]))
-
-def funcBtnNext():
-    global index
-    index += 1
-    if index >= len(elist):
-        index = 0  # Go to the beginning
-    showCookie()
-
-def funcBtnPrev():
-    global index
-    index -= 1
-    if index < 0:
-        index = len(elist) - 1  # Go to the end
-    showCookie()
-
-def funcBtnSave():
-    formatcookie = cookie + '\n%\n'
-    if cookie not in saved:
-        try:
-            with open(savefile, 'a') as f:
-                f.write(formatcookie)
+            for line in text.split("\n%\n"):
+                if line:
+                    n += 1
+                    if decode:
+                        line = self.decrypt(line)
+                    self.epigrams.update({line: (line, path, decode)})
+            f.close()
+            self.statics.update({path: (n, decode)})
         except PermissionError:
-            fixpermissions()
-        except Exception as e:
-            fatal_exception(e.errno, e.strerror)
-        f.close()
-        saved.append(cookie)
-        btnSave.setEnabled(False)
+            print('PermissionError')
+            self.close()
 
-def fatal_exception(errorcode, errortext):
-    QMessageBox.critical(w, _('QFortune: Critical error'),
-                            _('An unexpected error has happened.<p>')
-                            + _('Error code: <b>') + str(errorcode)
-                            + _('</b><p>')
-                            + _('Error message: <i>') + errortext
-                            + _('</i><p><p>The program will close.'))
-    sys.exit(exitcode)
+    def nextFile(self):
+        self.index += 1
+        if self.index >= self.nepigrams:
+            self.index = 0  # Go to the beginning
+        self.showCookie()
 
-def funcBtnExit():
-    QCoreApplication.instance().quit()
+    def prevFile(self):
+        self.index -= 1
+        if self.index < 0:
+            self.index = self.nepigrams - 1  # Go to the end
+        self.showCookie()
 
-def settitle():
-    title = _('QFortune:') + ' ' + str(index + 1)
-    w.setWindowTitle(title)
+    def save(self):
+        formatcookie = self.cookie + "\n%\n"
+        if self.cookie not in self.saved:
+            try:
+                with open(savefile, 'a') as f:
+                    f.write(formatcookie)
+            except PermissionError:
+                print('PermissionError at save')
+                sys.exit()
+            except:
+                print('Exception at save')
+                sys.exit()
+            f.close()
+            self.saved.append(self.cookie)
+            self.saveAct.setEnabled(False)
 
-def disablebuttons():
-    # Save button:
-    if cookie in saved:
-        btnSave.setEnabled(False)
-    else:
-        btnSave.setEnabled(True)
+    def about(self):
+        aboutdialog.show()
 
-def center_window(w):
-    # get screen width and height
+    def setTitle(self):
+        title = _("QFortune:") + " " + str(self.index + 1)
+        self.setWindowTitle(title)
 
-    resolution = QDesktopWidget().screenGeometry()
-    w.move((resolution.width() / 2) - (w.frameSize().width() / 2),
-           (resolution.height() / 2) - (w.frameSize().height() / 2))
+    def disableSave(self):
+        # Save button:
+        if self.cookie in self.saved:
+            self.saveAct.setEnabled(False)
+        else:
+            self.saveAct.setEnabled(True)
 
-def switchVisibility(widget):
-    if widget.isVisible():
-        widget.hide()
-    else:
-        widget.show()
+    def showCookie(self):
+        if len(self.elist) == 0:
+            noCookiesDialog()
+        self.cookie = self.epigrams[self.elist[self.index]][0]
+        path = self.epigrams[self.elist[self.index]][1]
+        off = self.epigrams[self.elist[self.index]][2]
+        if off:
+            off = _("(Offensive) ")
+        else:
+            off = ""
+        self.textEdit.setText(self.cookie)
+        self.disableSave()
+        self.setTitle()
+        txt = 'READY'
+        self.createStatusBar(txt)
 
-gettext.translation('qfortune', localedir='/usr/share/locale',
-fallback=True).install()
+    def createActions(self):
+        root = QFileInfo(__file__).absolutePath()
 
-aboutappstr = _('<b>QFortune:</b> ') + _(DESCRIPTION) + '<p>'
-aboutappstr +=  _('<b>Version:</b> ') + VERSION + '<p>'
-aboutappstr +=  _('<b>Author:</b> ') + AUTHOR
-aboutappstr += " <a href='mailto:" + MAIL + "'>email</a>" + '<p>'
-aboutappstr +=  _('<b>License:</b> ') + LICENSE
+        self.nextAct = QAction(QIcon.fromTheme('go-next'), _("&Next cookie"),
+                              self, shortcut=QKeySequence.MoveToNextPage,
+                              statusTip=_("Show next cookie if available"),
+                              triggered=self.nextFile)
 
-app = QApplication(sys.argv)
-w = QWidget()
+        self.prevAct = QAction(QIcon.fromTheme('go-previous'), _("&Previous cookie"),
+                              self, shortcut=QKeySequence.MoveToPreviousPage,
+                              statusTip=_("Show previous cookie if available"),
+                              triggered=self.prevFile)
 
-txt = QTextEdit()
-txt.setReadOnly(True)
+        self.saveAct = QAction(QIcon.fromTheme('document-save'), _("&Save"), self,
+                shortcut=QKeySequence.Save,
+                statusTip=_("Save fortune to favorites"), triggered=self.save)
 
-btnNext = QPushButton(_('Next'), w)
-btnNext.setIcon(QIcon.fromTheme('go-next'))
-btnNext.setToolTip(_('Show next cookie if available'))
-btnNext.clicked.connect(funcBtnNext)
+        self.exitAct = QAction(QIcon.fromTheme('window-close'), _("E&xit"), self, shortcut=QKeySequence.Quit,
+                statusTip=_("Exit the application"), triggered=self.close)
 
-btnPrev = QPushButton(_('Previous'), w)
-btnPrev.setIcon(QIcon.fromTheme('go-previous'))
-btnPrev.setToolTip(_('Show previous cookie if available'))
-btnPrev.clicked.connect(funcBtnPrev)
+        self.copyAct = QAction(QIcon.fromTheme('edit-copy'), _("&Copy"), self,
+                shortcut=QKeySequence.Copy,
+                statusTip=_("Copy the current selection's contents to the clipboard"),
+                triggered=self.textEdit.copy)
 
-btnSave = QPushButton(_('Save'), w)
-btnSave.setIcon(QIcon.fromTheme('document-save'))
-btnSave.setToolTip(_('Save the cookie in your database file'))
-btnSave.clicked.connect(funcBtnSave)
+        self.aboutAct = QAction(QIcon.fromTheme('help-about'), _("&About QFortune"), self,
+                statusTip=_("Show the application's About box"),
+                triggered=self.about)
 
-btnExit = QPushButton(_('Exit'), w)
-btnExit.setIcon(QIcon.fromTheme('window-close'))
-btnExit.setToolTip(_('Exit program'))
-btnExit.clicked.connect(funcBtnExit)
+        self.aboutQtAct = QAction(QIcon.fromTheme('help-about'), _("About &Qt"), self,
+                statusTip=_("Show the Qt library's About box"),
+                triggered=QApplication.instance().aboutQt)
 
-sb = QStatusBar()
-sb.hide()
+        self.copyAct.setEnabled(False)
+        self.textEdit.copyAvailable.connect(self.copyAct.setEnabled)
 
-mainMenu = QMenuBar()
+    def createMenus(self):
+        self.fileMenu = self.menuBar().addMenu(_("&File"))
+        self.fileMenu.addAction(self.prevAct)
+        self.fileMenu.addAction(self.nextAct)
+        self.fileMenu.addAction(self.saveAct)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.exitAct)
 
+        self.editMenu = self.menuBar().addMenu(_("&Edit"))
+        self.editMenu.addAction(self.copyAct)
 
-grid = QGridLayout()
-grid.addWidget(mainMenu, 0, 0, 1, 4)
+        self.menuBar().addSeparator()
 
-grid.addWidget(txt, 1, 0, 1, 4)
-grid.addWidget(btnPrev, 2, 0)
-grid.addWidget(btnNext, 2, 1)
-grid.addWidget(btnSave, 2, 2)
-grid.addWidget(btnExit, 2, 3)
-grid.addWidget(sb, 3, 0, 1, 4)
+        self.helpMenu = self.menuBar().addMenu(_("&Help"))
+        self.helpMenu.addAction(self.aboutAct)
+        self.helpMenu.addAction(self.aboutQtAct)
 
-aa = QWidget()
-aa.setWindowTitle(_('About QFortune'))
-aa.setWindowIcon(QIcon.fromTheme('qfortune'))
-aa.resize(400, 300)
-center_window(aa)
-aaTxt = QLabel()
-aaTxt.setText(aboutappstr)
-aaBtnExit = QPushButton(_('Exit'), aa)
-aaBtnExit.setIcon(QIcon.fromTheme('window-close'))
-aaBtnExit.setToolTip(_('Exit program'))
-aaBtnExit.clicked.connect(aa.close)
-aaGrid = QGridLayout()
-aaGrid.addWidget(aaTxt, 0, 0, 1, 2)
-aaGrid.addWidget(aaBtnExit, 1, 1)
-aa.setLayout(aaGrid)
+    def createToolBars(self):
+        self.fileToolBar = self.addToolBar(_("File"))
+        self.fileToolBar.addAction(self.prevAct)
+        self.fileToolBar.addAction(self.nextAct)
+        self.fileToolBar.addAction(self.saveAct)
 
+        self.editToolBar = self.addToolBar(_("Edit"))
+        self.editToolBar.addAction(self.copyAct)
 
-# MENU CONFIGURATION
-fileMenu = mainMenu.addMenu(_('File'))
-actNext = QAction(QIcon.fromTheme('go-next'), _('Next cookie'))
-actNext.setShortcut('Ctrl+Right')
-actNext.setStatusTip(_('Show next cookie if available'))
-actNext.triggered.connect(funcBtnNext)
-fileMenu.addAction(actNext)
-actPrev = QAction(QIcon.fromTheme('go-previous'), _('Next cookie'))
-actPrev.setShortcut('Ctrl+Left')
-actPrev.setStatusTip(_('Show previous cookie if available'))
-actPrev.triggered.connect(funcBtnPrev)
-fileMenu.addAction(actPrev)
-actSave = QAction(QIcon.fromTheme('document-save'), _('Save'))
-actSave.setShortcut('Ctrl+S')
-actSave.setStatusTip(_('Save epigram to database'))
-actSave.triggered.connect(funcBtnSave)
-fileMenu.addAction(actSave)
+    def createStatusBar(self, message):
+        self.statusBar().showMessage(message)
 
-actExit = QAction(QIcon.fromTheme('window-close'), _('Exit'))
-actExit.setShortcut('Ctrl+Q')
-actExit.setStatusTip(_('Exit application'))
-actExit.triggered.connect(funcBtnExit)
-fileMenu.addAction(actExit)
-
-editMenu = mainMenu.addMenu('Edit')
-actEditSaved = QAction(QIcon.fromTheme('document-edit'), _('Edit saved database'))
-actEditSaved.setShortcut('F2')
-editMenu.addAction(actEditSaved)
-
-viewMenu = mainMenu.addMenu('View')
-actShowSB = QAction(QIcon.fromTheme('kt-show-statusbar'), _('Show/Hide status bar'))
-actShowSB.setShortcut('F5')
-actShowSB.triggered.connect(functools.partial(switchVisibility, sb))
-viewMenu.addAction(actShowSB)
-
-searchMenu = mainMenu.addMenu('Tools')
-toolsMenu = mainMenu.addMenu('Preferences')
-
-helpMenu = mainMenu.addMenu(_('Help'))
-actShowAboutApp = QAction(QIcon.fromTheme('qfortune'), _('About QFortune'))
-actShowAboutApp.setStatusTip(_('Show info about this program'))
-actShowAboutApp.triggered.connect(aa.show)
-helpMenu.addAction(actShowAboutApp)
-
-
-def main():
-    global index
-    global elist
-    global cookie
-
-    index = -1
-
-    for i in fortunes, custom_fortunes:
-        loaddb(i)
-    for i in fortunes_off, custom_fortunes_off:
-        loaddb(i, True)
-
-    elist = list(epigrams.keys())
-
-    #random.shuffle(elist)
-
-    w.setWindowTitle('QFortune')
-    w.setWindowIcon(QIcon.fromTheme('qfortune'))
-    w.resize(500, 200)
-    center_window(w)
-    w.addAction(actShowSB)
-    w.setLayout(grid)
-    w.show()
-    funcBtnNext()
-    sys.exit(app.exec_())
+    def readSettings(self):
+        settings = QSettings("QFortune", _("Settings"))
+        pos = settings.value("pos", QPoint(200, 200))
+        size = settings.value("size", QSize(400, 400))
+        self.setWindowIcon(QIcon.fromTheme("qfortune"))
+        self.resize(size)
+        self.move(pos)
 
 if __name__ == '__main__':
-    main()
+
+    import sys
+
+    gettext.translation("qfortune", localedir="/usr/share/locale", fallback=True).install()
+
+    app = QApplication(sys.argv)
+    mainWin = MainWindow()
+    aboutdialog = AboutDialog()
+    mainWin.show()
+    sys.exit(app.exec_())
