@@ -294,7 +294,7 @@ class MainWindow(QMainWindow):
                                triggered=self.copyCookie)
 
         self.aboutAct = QAction(QIcon.fromTheme(EXECUTABLE_NAME),
-                                _("&About" + " " + PROGRAM_NAME), self,
+                                _("&About") + " " + PROGRAM_NAME, self,
                                 statusTip=_("Information about"
                                             " this application"),
                                 triggered=self.about)
@@ -385,7 +385,7 @@ class AboutDialog(QWidget):
         mainLayout.addWidget(btn, 2, 0, Qt.AlignRight)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle(_("About" + " " + PROGRAM_NAME))
+        self.setWindowTitle(_("About") + " " + PROGRAM_NAME)
         self.setWindowIcon(QIcon.fromTheme(EXECUTABLE_NAME))
 
 
