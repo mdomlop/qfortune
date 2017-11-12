@@ -2,6 +2,7 @@ PREFIX = '/usr'
 DESTDIR = ''
 TEMPDIR := $(shell mktemp -u --suffix .qfortune)
 PROGRAM_NAME := $(shell grep ^PROGRAM_NAME src/qfortune.py | cut -d\" -f2)
+EXECUTABLE_NAME := $(shell grep ^EXECUTABLE_NAME src/qfortune.py | cut -d\" -f2)
 DESCRIPTION := $(shell grep ^DESCRIPTION src/qfortune.py | cut -d\" -f2)
 VERSION := $(shell grep ^VERSION src/qfortune.py | cut -d\" -f2)
 AUTHOR := $(shell grep ^AUTHOR src/qfortune.py | cut -d\" -f2)
@@ -25,7 +26,7 @@ messages.pot: src/qfortune.py
 	pygettext3 $^
 
 ChangeLog: changelog.in
-	@echo "$(PROGRAM_NAME) ($(VERSION)) unstable; urgency=medium" > $@
+	@echo "$(EXECUTABLE_NAME) ($(VERSION)) unstable; urgency=medium" > $@
 	@echo >> $@
 	@echo "  * Git build." >> $@
 	@echo >> $@
