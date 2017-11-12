@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 
-from PyQt5.QtCore import (QFile, QFileInfo, QPoint, QRect, QSettings, QSize,
-        Qt, QTextStream, QT_VERSION_STR)
-from PyQt5.QtGui import QIcon, QKeySequence, QFont
-from PyQt5.QtWidgets import (QWidget, QDialog, QAction, QApplication, QFileDialog, QMainWindow, QLabel, QLineEdit, QTabWidget, QGridLayout, QVBoxLayout, QHBoxLayout,
-        QMessageBox, QTextEdit, QPushButton)
 import os
 import random
 import gettext
+
+from PyQt5.QtCore import (QFile, QFileInfo, QPoint, QRect, QSettings, QSize,
+                          Qt, QTextStream, QT_VERSION_STR)
+from PyQt5.QtGui import QIcon, QKeySequence, QFont
+from PyQt5.QtWidgets import (QWidget, QDialog, QAction, QApplication,
+                             QFileDialog, QMainWindow, QLabel, QLineEdit,
+                             QTabWidget, QGridLayout, QVBoxLayout,
+                             QHBoxLayout, QMessageBox, QTextEdit, QPushButton)
+
 
 PROGRAM_NAME = "qfortune"
 DESCRIPTION = "A pyQt5 interface for reading fortune cookies"
@@ -20,15 +24,17 @@ fortunes = "/usr/share/qfortune/fortunes"
 fortunes_off = "/usr/share/qfortune/fortunes/off"
 custom_fortunes = os.path.join(os.getenv("HOME"), ".config/qfortune/fortunes")
 custom_fortunes_off = os.path.join(os.getenv("HOME"),
-                        ".config/qfortune/fortunes/off")
-savefile = os.path.join(os.getenv("HOME"), ".config/qfortune/favorites.cookies")
+                                   ".config/qfortune/fortunes/off")
+savefile = os.path.join(os.getenv("HOME"),
+                        ".config/qfortune/favorites.cookies")
+
 
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
 
         font = QFont()
-        font.setPointSize(18);
+        font.setPointSize(18)
         font.setBold(False)
         labelIcon = QLabel()
         pixmap = QIcon.fromTheme('qfortune').pixmap(QSize(64, 64))
@@ -42,7 +48,6 @@ class AboutDialog(QDialog):
         tabWidget.addTab(AuthorsTab(), "Authors")
         tabWidget.addTab(ThanksTab(), "Thanks")
         tabWidget.addTab(TranslationTab(), "Translation")
-
 
         btn = QPushButton("Close", self)
         btn.setIcon(QIcon.fromTheme("window-close"))
@@ -70,8 +75,11 @@ class AboutTab(QWidget):
         blank = QLabel()
         description = QLabel("A pyQt5 interface for reading fortune cookies")
         copyright = QLabel("© 2017, Manuel Domínguez López")
-        source = QLabel("<a href='https://github.com/mdomlop/qfortune'>github</a>")
-        license= QLabel("<a href='https://www.gnu.org/licenses/gpl-3.0.en.html'>GPLv3+</a>")
+        source = QLabel("<a href='https://github.com/mdomlop/qfortune'>"
+                        "github</a>")
+        license = QLabel("<a href='https://www.gnu.org/licenses/"
+                         "gpl-3.0.en.html'>GPLv3+</a>")
+
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(blank)
         mainLayout.addWidget(blank)
@@ -97,7 +105,6 @@ class VersionTab(QWidget):
         python = QLabel("<ul><li>Python " + pyver)
         pyqt = QLabel("<ul><li>PyQt " + QT_VERSION_STR)
 
-
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(version)
         mainLayout.addWidget(using)
@@ -105,6 +112,7 @@ class VersionTab(QWidget):
         mainLayout.addWidget(pyqt)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
+
 
 class AuthorsTab(QWidget):
     def __init__(self, parent=None):
@@ -116,7 +124,6 @@ class AuthorsTab(QWidget):
         task1 = QLabel("<i>Principle author</i>")
         mail1 = QLabel("<pre>mdomlop@gmail.com</pre>")
 
-
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(notice)
         mainLayout.addWidget(blank)
@@ -125,6 +132,7 @@ class AuthorsTab(QWidget):
         mainLayout.addWidget(mail1)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
+
 
 class ThanksTab(QWidget):
     def __init__(self, parent=None):
@@ -133,23 +141,23 @@ class ThanksTab(QWidget):
         blank = QLabel()
         notice = QLabel("Thank you for using my program.")
 
-
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(blank)
         mainLayout.addWidget(notice)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
 
+
 class TranslationTab(QWidget):
     def __init__(self, parent=None):
         super(TranslationTab, self).__init__(parent)
 
         blank = QLabel()
-        notice = QLabel("Please, mail me if you want to improve a translation.")
+        notice = QLabel("Please, mail me if you want to"
+                        " improve the translation.")
         name1 = QLabel("<b>Manuel Domínguez López<b>")
         task1 = QLabel("<i>Spanish and english translation</i>")
         mail1 = QLabel("<pre>mdomlop@gmail.com</pre>")
-
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(notice)
@@ -159,6 +167,7 @@ class TranslationTab(QWidget):
         mainLayout.addWidget(mail1)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -193,7 +202,7 @@ class MainWindow(QMainWindow):
         self.readSettings()
 
     def decrypt(self, s):  # Unix offensive fortunes are rot13 encoded
-        rot13 =str.maketrans(
+        rot13 = str.maketrans(
             "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
             "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
         return(str.translate(s, rot13))
@@ -296,35 +305,44 @@ class MainWindow(QMainWindow):
     def createActions(self):
         root = QFileInfo(__file__).absolutePath()
 
-        self.nextAct = QAction(QIcon.fromTheme('go-next'), _("&Next cookie"),
-                              self, shortcut=QKeySequence.MoveToNextPage,
-                              statusTip=_("Show next cookie if available"),
-                              triggered=self.nextFile)
+        self.nextAct = QAction(QIcon.fromTheme('go-next'),
+                               _("&Next cookie"),
+                               self, shortcut=QKeySequence.MoveToNextPage,
+                               statusTip=_("Show next cookie"),
+                               triggered=self.nextFile)
 
-        self.prevAct = QAction(QIcon.fromTheme('go-previous'), _("&Previous cookie"),
-                              self, shortcut=QKeySequence.MoveToPreviousPage,
-                              statusTip=_("Show previous cookie if available"),
-                              triggered=self.prevFile)
+        self.prevAct = QAction(QIcon.fromTheme('go-previous'),
+                               _("&Previous cookie"),
+                               self, shortcut=QKeySequence.MoveToPreviousPage,
+                               statusTip=_("Show previous cookie"),
+                               triggered=self.prevFile)
 
-        self.saveAct = QAction(QIcon.fromTheme('document-save'), _("&Save"), self,
-                shortcut=QKeySequence.Save,
-                statusTip=_("Save fortune to favorites"), triggered=self.save)
+        self.saveAct = QAction(QIcon.fromTheme('document-save'), _("&Save"),
+                               self, shortcut=QKeySequence.Save,
+                               statusTip=_("Save cookie to favorites"),
+                               triggered=self.save)
 
-        self.exitAct = QAction(QIcon.fromTheme('window-close'), _("E&xit"), self, shortcut=QKeySequence.Quit,
-                statusTip=_("Exit the application"), triggered=self.close)
+        self.exitAct = QAction(QIcon.fromTheme('window-close'), _("E&xit"),
+                               self, shortcut=QKeySequence.Quit,
+                               statusTip=_("Exit the application"),
+                               triggered=self.close)
 
-        self.copyAct = QAction(QIcon.fromTheme('edit-copy'), _("&Copy"), self,
-                shortcut=QKeySequence.Copy,
-                statusTip=_("Copy the current selection's contents to the clipboard"),
-                triggered=self.textEdit.copy)
+        self.copyAct = QAction(QIcon.fromTheme('edit-copy'), _("&Copy"),
+                               self, shortcut=QKeySequence.Copy,
+                               statusTip=_("Copy cookie to the clipboard"),
+                               triggered=self.textEdit.copy)
 
-        self.aboutAct = QAction(QIcon.fromTheme('help-about'), _("&About QFortune"), self,
-                statusTip=_("Show the application's About box"),
-                triggered=self.about)
+        self.aboutAct = QAction(QIcon.fromTheme('help-about'),
+                                _("&About QFortune"), self,
+                                statusTip=_("Information about"
+                                            " this application"),
+                                triggered=self.about)
 
-        self.aboutQtAct = QAction(QIcon.fromTheme('help-about'), _("About &Qt"), self,
-                statusTip=_("Show the Qt library's About box"),
-                triggered=QApplication.instance().aboutQt)
+        self.aboutQtAct = QAction(QIcon.fromTheme('help-about'),
+                                  _("About &Qt"), self,
+                                  statusTip=_("Show information about"
+                                              " the Qt library"),
+                                  triggered=QApplication.instance().aboutQt)
 
         self.copyAct.setEnabled(False)
         self.textEdit.copyAvailable.connect(self.copyAct.setEnabled)
@@ -366,11 +384,13 @@ class MainWindow(QMainWindow):
         self.resize(size)
         self.move(pos)
 
+
 if __name__ == '__main__':
 
     import sys
 
-    gettext.translation("qfortune", localedir="/usr/share/locale", fallback=True).install()
+    gettext.translation("qfortune", localedir="/usr/share/locale",
+                        fallback=True).install()
 
     app = QApplication(sys.argv)
     mainWin = MainWindow()
