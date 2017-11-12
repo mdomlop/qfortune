@@ -76,7 +76,6 @@ class MainWindow(QMainWindow):
 
         self.labelGoTo = QLabel("Go to")
         self.comboGoTo = QComboBox()
-        #self.comboGoTo.currentIndexChanged[str].connect(self.goTo)
         for i in range(self.nepigrams):
             self.comboGoTo.addItem(str(i + 1))
         self.comboGoTo.setEditable(True)
@@ -223,10 +222,6 @@ class MainWindow(QMainWindow):
         offensive = self.isOffensive()[1]
         saved = self.isSaved()[1]
         copied = self.isCopied()[1]
-        #text = " ".join((origin, offensive, saved, copied))
-        #self.textEdit.setStatusTip(text)
-        #self.textEdit.setToolTip(text)
-        #self.statusBar().showMessage(text)
         self.statusOrigin.setText(origin)
         self.statusOffensive.setText(offensive)
         self.statusSaved.setText(saved)
@@ -254,10 +249,10 @@ class MainWindow(QMainWindow):
 
     def createActions(self):
         self.firstAct = QAction(QIcon.fromTheme('go-first'),
-                               _("&First"),
-                               self, shortcut=QKeySequence.MoveToStartOfLine,
-                               statusTip=_("Show first cookie"),
-                               triggered=self.firstCookie)
+                                _("&First"),
+                                self, shortcut=QKeySequence.MoveToStartOfLine,
+                                statusTip=_("Show first cookie"),
+                                triggered=self.firstCookie)
 
         self.lastAct = QAction(QIcon.fromTheme('go-last'),
                                _("&Last"),
@@ -305,9 +300,6 @@ class MainWindow(QMainWindow):
                                               " the Qt library"),
                                   triggered=QApplication.instance().aboutQt)
 
-        #self.copyAct.setEnabled(False)
-        #self.textEdit.copyAvailable.connect(self.copyAct.setEnabled)
-
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu(_("&File"))
         self.fileMenu.addAction(self.copyAct)
@@ -340,7 +332,6 @@ class MainWindow(QMainWindow):
     def createStatusBar(self, message=None):
         if not message:
             message = str(self.nepigrams)
-        #self.statusBar().showMessage(message)
         self.statusBar().addWidget(self.statusOrigin, Qt.AlignLeft)
         self.statusBar().addWidget(self.statusOffensive, Qt.AlignRight)
         self.statusBar().addWidget(self.statusSaved, Qt.AlignRight)
@@ -348,12 +339,10 @@ class MainWindow(QMainWindow):
 
     def readSettings(self):
         settings = QSettings("QFortune", _("Settings"))
-        #pos = settings.value("pos", QPoint(200, 200))
         size = settings.value("size", QSize(400, 300))
         self.setWindowTitle("QFortune")
         self.setWindowIcon(QIcon.fromTheme("qfortune"))
         self.resize(size)
-        #self.move(pos)
 
 
 class AboutDialog(QWidget):
@@ -403,7 +392,7 @@ class AboutTab(QWidget):
         description = QLabel("A pyQt5 interface for reading fortune cookies")
         copyright = QLabel("© 2017, " + AUTHOR)
         source = QLabel(_("Source: ")
-                        + "<a href='" + SOURCE + "'>" + SOURCE +"</a>")
+                        + "<a href='" + SOURCE + "'>" + SOURCE + "</a>")
         license = QLabel(_("License: ")
                          + "<a href='https://www.gnu.org/licenses/"
                          "gpl-3.0.en.html'>"
