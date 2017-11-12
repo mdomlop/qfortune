@@ -12,9 +12,13 @@ from PyQt5.QtWidgets import (QWidget, QAction, QApplication, QComboBox,
                              QTabWidget, QGridLayout, QVBoxLayout,
                              QHBoxLayout, QMessageBox, QTextEdit, QPushButton)
 
+PROGRAM_NAME = "QFortune"
 
-PROGRAM_NAME = "qfortune"
-DESCRIPTION = "A pyQt5 interface for reading fortune cookies"
+gettext.translation(PROGRAM_NAME, localedir="/usr/share/locale",
+                    fallback=True).install()
+
+EXECUTABLE_NAME = "qfortune"
+DESCRIPTION = _("A pyQt5 interface for reading fortune cookies")
 VERSION = "0.4a"
 AUTHOR = "Manuel Domínguez López"  # See AUTHORS file
 MAIL = "mdomlop@gmail.com"
@@ -42,13 +46,14 @@ License: GPL-3.0+
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 '''
 
-fortunes = "/usr/share/qfortune/fortunes"
-fortunes_off = "/usr/share/qfortune/fortunes/off"
-custom_fortunes = os.path.join(os.getenv("HOME"), ".config/qfortune/fortunes")
-custom_fortunes_off = os.path.join(os.getenv("HOME"),
-                                   ".config/qfortune/fortunes/off")
-savefile = os.path.join(os.getenv("HOME"),
-                        ".config/qfortune/favorites.cookies")
+fortunes = "/usr/share/" + EXECUTABLE_NAME + "/fortunes"
+fortunes_off = "/usr/share/" + EXECUTABLE_NAME + "/fortunes/off"
+custom_fortunes = os.path.join(os.getenv("HOME"), ".config/"
+                               + EXECUTABLE_NAME + "/fortunes")
+custom_fortunes_off = os.path.join(os.getenv("HOME"), ".config/"
+                                   + EXECUTABLE_NAME + "/fortunes/off")
+savefile = os.path.join(os.getenv("HOME"), ".config/"
+                        + EXECUTABLE_NAME + "/favorites.cookies")
 
 
 class MainWindow(QMainWindow):
@@ -80,7 +85,7 @@ class MainWindow(QMainWindow):
             self.comboGoTo.addItem(str(i + 1))
         self.comboGoTo.setEditable(True)
         self.comboGoTo.currentIndexChanged[str].connect(self.goToComboIndex)
-        #self.comboGoTo.setValidator('#')
+        # self.comboGoTo.setValidator('#')
 
         self.index = -1
 
@@ -288,8 +293,8 @@ class MainWindow(QMainWindow):
                                statusTip=_("Copy cookie to the clipboard"),
                                triggered=self.copyCookie)
 
-        self.aboutAct = QAction(QIcon.fromTheme('qfortune'),
-                                _("&About QFortune"), self,
+        self.aboutAct = QAction(QIcon.fromTheme(EXECUTABLE_NAME),
+                                _("&About" + " " + PROGRAM_NAME), self,
                                 statusTip=_("Information about"
                                             " this application"),
                                 triggered=self.about)
@@ -338,10 +343,10 @@ class MainWindow(QMainWindow):
         self.statusBar().addWidget(self.statusCopied, Qt.AlignRight)
 
     def readSettings(self):
-        settings = QSettings("QFortune", _("Settings"))
+        settings = QSettings(PROGRAM_NAME, _("Settings"))
         size = settings.value("size", QSize(400, 300))
-        self.setWindowTitle("QFortune")
-        self.setWindowIcon(QIcon.fromTheme("qfortune"))
+        self.setWindowTitle(PROGRAM_NAME)
+        self.setWindowIcon(QIcon.fromTheme(EXECUTABLE_NAME))
         self.resize(size)
 
 
@@ -353,21 +358,21 @@ class AboutDialog(QWidget):
         font.setPointSize(18)
         font.setBold(False)
         labelIcon = QLabel()
-        pixmap = QIcon.fromTheme('qfortune').pixmap(QSize(64, 64))
+        pixmap = QIcon.fromTheme(EXECUTABLE_NAME).pixmap(QSize(64, 64))
         labelIcon.setPixmap(pixmap)
-        labelText = QLabel("QFortune")
+        labelText = QLabel(PROGRAM_NAME)
         labelText.setFont(font)
 
         tabWidget = QTabWidget()
-        tabWidget.addTab(AboutTab(), "About")
-        tabWidget.addTab(VersionTab(), "Version")
-        tabWidget.addTab(AuthorsTab(), "Authors")
-        tabWidget.addTab(ThanksTab(), "Thanks")
-        tabWidget.addTab(TranslationTab(), "Translation")
+        tabWidget.addTab(AboutTab(), _("About"))
+        tabWidget.addTab(VersionTab(), _("Version"))
+        tabWidget.addTab(AuthorsTab(), _("Authors"))
+        tabWidget.addTab(ThanksTab(), _("Thanks"))
+        tabWidget.addTab(TranslationTab(), _("Translation"))
 
         btn = QPushButton("Close", self)
         btn.setIcon(QIcon.fromTheme("window-close"))
-        btn.setToolTip("Close this dialog")
+        btn.setToolTip(_("Close this window"))
         btn.clicked.connect(self.close)
 
         labelLayout = QHBoxLayout()
@@ -380,8 +385,8 @@ class AboutDialog(QWidget):
         mainLayout.addWidget(btn, 2, 0, Qt.AlignRight)
         self.setLayout(mainLayout)
 
-        self.setWindowTitle("About QFortune")
-        self.setWindowIcon(QIcon.fromTheme('qfortune'))
+        self.setWindowTitle(_("About" + " " + PROGRAM_NAME))
+        self.setWindowIcon(QIcon.fromTheme(EXECUTABLE_NAME))
 
 
 class AboutTab(QWidget):
@@ -389,11 +394,11 @@ class AboutTab(QWidget):
         super(AboutTab, self).__init__(parent)
 
         blank = QLabel()
-        description = QLabel("A pyQt5 interface for reading fortune cookies")
+        description = QLabel(DESCRIPTION)
         copyright = QLabel("© 2017, " + AUTHOR)
-        source = QLabel(_("Source: ")
+        source = QLabel(_("Source:") + " "
                         + "<a href='" + SOURCE + "'>" + SOURCE + "</a>")
-        license = QLabel(_("License: ")
+        license = QLabel(_("License:") + " "
                          + "<a href='https://www.gnu.org/licenses/"
                          "gpl-3.0.en.html'>"
                          + _("GNU General Public License, version 3") + "</a>")
@@ -417,8 +422,8 @@ class VersionTab(QWidget):
     def __init__(self, parent=None):
         super(VersionTab, self).__init__(parent)
 
-        version = QLabel("<b>Version " + VERSION + "<b>")
-        using = QLabel("Usando:")
+        version = QLabel("<b>" + _("Version") + " " + VERSION + "<b>")
+        using = QLabel(_("Using:") + " ")
         pyver = ".".join((
             str(sys.version_info[0]),
             str(sys.version_info[1]),
@@ -440,10 +445,10 @@ class AuthorsTab(QWidget):
         super(AuthorsTab, self).__init__(parent)
 
         blank = QLabel()
-        notice = QLabel("Mail me if you found bugs.")
-        name1 = QLabel("<b>Manuel Domínguez López<b>")
-        task1 = QLabel("<i>Principle author</i>")
-        mail1 = QLabel("<pre>mdomlop@gmail.com</pre>")
+        notice = QLabel(_("Mail me if you found bugs."))
+        name1 = QLabel("<b>" + AUTHOR + "<b>")
+        task1 = QLabel("<i>" + _("Principle author") + "</i>")
+        mail1 = QLabel("<pre>" + MAIL + "</pre>")
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(notice)
@@ -460,7 +465,7 @@ class ThanksTab(QWidget):
         super(ThanksTab, self).__init__(parent)
 
         blank = QLabel()
-        notice = QLabel("Thank you for using my program.")
+        notice = QLabel(_("Thank you for using my program."))
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(blank)
@@ -474,11 +479,11 @@ class TranslationTab(QWidget):
         super(TranslationTab, self).__init__(parent)
 
         blank = QLabel()
-        notice = QLabel("Please, mail me if you want to"
-                        " improve the translation.")
-        name1 = QLabel("<b>Manuel Domínguez López<b>")
-        task1 = QLabel("<i>Spanish and english translation</i>")
-        mail1 = QLabel("<pre>mdomlop@gmail.com</pre>")
+        notice = QLabel(_("Please, mail me if you want to") + " "
+                        + _("improve the translation."))
+        name1 = QLabel("<b>" + AUTHOR + "<b>")
+        task1 = QLabel("<i>" + _("Spanish and english translation") + "</i>")
+        mail1 = QLabel("<pre>" + MAIL + "</pre>")
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(notice)
@@ -493,9 +498,6 @@ class TranslationTab(QWidget):
 if __name__ == '__main__':
 
     import sys
-
-    gettext.translation("qfortune", localedir="/usr/share/locale",
-                        fallback=True).install()
 
     app = QApplication(sys.argv)
     mainWin = MainWindow()

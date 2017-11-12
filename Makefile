@@ -1,12 +1,12 @@
 PREFIX = '/usr'
 DESTDIR = ''
 TEMPDIR := $(shell mktemp -u --suffix .qfortune)
-PROGRAM_NAME := $(shell grep ^PROGRAM_NAME src/qfortune.py | cut -d\' -f2)
-DESCRIPTION := $(shell grep ^DESCRIPTION src/qfortune.py | cut -d\' -f2)
-VERSION := $(shell grep ^VERSION src/qfortune.py | cut -d\' -f2)
-AUTHOR := $(shell grep ^AUTHOR src/qfortune.py | cut -d\' -f2)
-MAIL := $(shell grep ^MAIL src/qfortune.py | cut -d\' -f2)
-LICENSE := $(shell grep ^LICENSE src/qfortune.py | cut -d\' -f2)
+PROGRAM_NAME := $(shell grep ^PROGRAM_NAME src/qfortune.py | cut -d\" -f2)
+DESCRIPTION := $(shell grep ^DESCRIPTION src/qfortune.py | cut -d\" -f2)
+VERSION := $(shell grep ^VERSION src/qfortune.py | cut -d\" -f2)
+AUTHOR := $(shell grep ^AUTHOR src/qfortune.py | cut -d\" -f2)
+MAIL := $(shell grep ^MAIL src/qfortune.py | cut -d\" -f2)
+LICENSE := $(shell grep ^LICENSE src/qfortune.py | cut -d\" -f2)
 TIMESTAMP = $(shell LC_ALL=C date '+%a, %d %b %Y %T %z')
 
 documents: ChangeLog mo
@@ -42,13 +42,18 @@ install: documents
 	install -Dm 644 resources/qfortune.svg $(DESTDIR)/$(PREFIX)/share/pixmaps/qfortune.svg
 	install -Dm 644 po/es.mo $(DESTDIR)/$(PREFIX)/share/locale/es/LC_MESSAGES/qfortune.mo
 	install -Dm 644 po/es_ES.mo $(DESTDIR)/$(PREFIX)/share/locale/es_ES/LC_MESSAGES/qfortune.mo
+	install -d -m 755 $(DESTDIR)/$(PREFIX)/share/qfortune
+	cp -r resources/fortunes $(DESTDIR)/$(PREFIX)/share/qfortune
+	chown -R root:root $(DESTDIR)/$(PREFIX)/share/qfortune
+	chmod -R u=rwX,go=rX $(DESTDIR)/$(PREFIX)/share/qfortune
 
 uninstall:
 	rm -f $(PREFIX)/bin/qfortune
-	rm -f $(PREFIX)/share/licenses/qfortune/
-	rm -f $(PREFIX)/share/doc/qfortune/
 	rm -f $(PREFIX)/share/locale/es/LC_MESSAGES/qfortune.mo
 	rm -f $(PREFIX)/share/locale/es_ES/LC_MESSAGES/qfortune.mo
+	rm -rf $(PREFIX)/share/licenses/qfortune/
+	rm -rf $(PREFIX)/share/doc/qfortune/
+	rm -rf $(PREFIX)/share/qfortune/
 
 clean:
 	rm -rf *.xz *.gz *.pot po/*.mo *.tgz *.deb *.rpm ChangeLog /tmp/tmp.*.qfortune debian/changelog debian/README debian/files debian/qfortune debian/debhelper-build-stamp debian/qfortune*
