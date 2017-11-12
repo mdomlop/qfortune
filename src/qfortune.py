@@ -7,7 +7,7 @@ import gettext
 from PyQt5.QtCore import (QFile, QFileInfo, QPoint, QRect, QSettings, QSize,
                           Qt, QTextStream, QT_VERSION_STR)
 from PyQt5.QtGui import QIcon, QKeySequence, QFont, QClipboard
-from PyQt5.QtWidgets import (QWidget, QAction, QApplication,
+from PyQt5.QtWidgets import (QWidget, QAction, QApplication, QComboBox,
                              QFileDialog, QMainWindow, QLabel, QLineEdit,
                              QTabWidget, QGridLayout, QVBoxLayout,
                              QHBoxLayout, QMessageBox, QTextEdit, QPushButton)
@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (QWidget, QAction, QApplication,
 
 PROGRAM_NAME = "qfortune"
 DESCRIPTION = "A pyQt5 interface for reading fortune cookies"
-VERSION = "0.3a"
+VERSION = "0.4a"
 AUTHOR = "Manuel Domínguez López"  # See AUTHORS file
 MAIL = "mdomlop@gmail.com"
 SOURCE = "https://github.com/mdomlop/qfortune"
@@ -69,11 +69,19 @@ class MainWindow(QMainWindow):
         random.shuffle(self.elist)
         self.cookie = 'unix'
 
-        self.statusIndex = QLabel('índice')
         self.statusOrigin = QLabel('from')
         self.statusOffensive = QLabel('ofensivo')
         self.statusSaved = QLabel('guadado')
         self.statusCopied = QLabel('copiado')
+
+        self.labelGoTo = QLabel("Go to")
+        self.comboGoTo = QComboBox()
+        #self.comboGoTo.currentIndexChanged[str].connect(self.goTo)
+        for i in range(self.nepigrams):
+            self.comboGoTo.addItem(str(i + 1))
+        self.comboGoTo.setEditable(True)
+        self.comboGoTo.currentIndexChanged[str].connect(self.goToComboIndex)
+        #self.comboGoTo.setValidator('#')
 
         self.index = -1
 
@@ -133,8 +141,8 @@ class MainWindow(QMainWindow):
             print('PermissionError')
             self.close()
 
-    def goToIndex(self, i=0):
-        self.index = i
+    def goToComboIndex(self):
+        self.index = self.comboGoTo.currentIndex()
         self.showCookie()
 
     def firstCookie(self):
@@ -185,19 +193,19 @@ class MainWindow(QMainWindow):
     def isSaved(self):
         ''' Returns status, text and abbreviation '''
         if self.cookie in self.saved:
-            return((False, _(" | Saved"), _("s")))
-        return((True, _("Unsaved"), ""))
+            return((False, _("Saved")))
+        return((True, _("Unsaved")))
 
     def isOffensive(self):
         ''' Returns status, text and abbreviation '''
         if self.epigrams[self.elist[self.index]][2]:
-            return((True, _("Offensive"), _("o")))
-        return((False, "", ""))
+            return((True, _("Offensive")))
+        return((False, ""))
 
     def isCopied(self):
         if QApplication.clipboard().text() == self.cookie:
-            return((True, _("Copied"), _("c")))
-        return((False, "", ""))
+            return((True, _("Copied")))
+        return((False, ""))
 
     def isFirst(self):
         if self.index == 0:
@@ -209,7 +217,23 @@ class MainWindow(QMainWindow):
             return(True)
         return(False)
 
+    def updateStatus(self):
+        path = self.epigrams[self.elist[self.index]][1]
+        origin = _("From: ") + os.path.basename(path)
+        offensive = self.isOffensive()[1]
+        saved = self.isSaved()[1]
+        copied = self.isCopied()[1]
+        #text = " ".join((origin, offensive, saved, copied))
+        #self.textEdit.setStatusTip(text)
+        #self.textEdit.setToolTip(text)
+        #self.statusBar().showMessage(text)
+        self.statusOrigin.setText(origin)
+        self.statusOffensive.setText(offensive)
+        self.statusSaved.setText(saved)
+        self.statusCopied.setText(copied)
+
     def updateInterface(self):
+        self.comboGoTo.setCurrentIndex(self.index)
         self.firstAct.setEnabled(not self.isFirst())
         self.prevAct.setEnabled(not self.isFirst())
 
@@ -219,32 +243,7 @@ class MainWindow(QMainWindow):
         self.copyAct.setEnabled(not self.isCopied()[0])
         self.saveAct.setEnabled(self.isSaved()[0])
 
-        self.updateTitle()
         self.updateStatus()
-
-    def updateTitle(self):
-        text = _("QFortune:") + " " \
-                + str(self.index + 1) + self.isOffensive()[2]\
-                + self.isSaved()[2]\
-                + self.isCopied()[2]
-        self.setWindowTitle(text)
-
-    def updateStatus(self):
-        path = self.epigrams[self.elist[self.index]][1]
-        index = str(self.index + 1) + _("/") + str(self.nepigrams)
-        origin = _("From: ") + os.path.basename(path)
-        offensive = self.isOffensive()[1]
-        saved = self.isSaved()[1]
-        copied = self.isCopied()[1]
-        text = " ".join((index, origin, offensive, saved, copied))
-        #self.textEdit.setStatusTip(text)
-        #self.textEdit.setToolTip(text)
-        #self.statusBar().showMessage(text)
-        self.statusIndex.setText(index)
-        self.statusOrigin.setText(origin)
-        self.statusOffensive.setText(offensive)
-        self.statusSaved.setText(saved)
-        self.statusCopied.setText(copied)
 
     def showCookie(self):
         if len(self.elist) == 0:
@@ -332,6 +331,7 @@ class MainWindow(QMainWindow):
         self.fileToolBar.addAction(self.prevAct)
         self.fileToolBar.addAction(self.nextAct)
         self.fileToolBar.addAction(self.lastAct)
+        self.fileToolBar.addWidget(self.comboGoTo)
 
         self.editToolBar = self.addToolBar(_("Navigation"))
         self.editToolBar.addAction(self.saveAct)
@@ -341,16 +341,16 @@ class MainWindow(QMainWindow):
         if not message:
             message = str(self.nepigrams)
         #self.statusBar().showMessage(message)
-        self.statusBar().addWidget(self.statusIndex)
-        self.statusBar().addWidget(self.statusOrigin)
-        self.statusBar().addWidget(self.statusOffensive)
-        self.statusBar().addWidget(self.statusSaved)
-        self.statusBar().addWidget(self.statusCopied)
+        self.statusBar().addWidget(self.statusOrigin, Qt.AlignLeft)
+        self.statusBar().addWidget(self.statusOffensive, Qt.AlignRight)
+        self.statusBar().addWidget(self.statusSaved, Qt.AlignRight)
+        self.statusBar().addWidget(self.statusCopied, Qt.AlignRight)
 
     def readSettings(self):
         settings = QSettings("QFortune", _("Settings"))
         #pos = settings.value("pos", QPoint(200, 200))
         size = settings.value("size", QSize(400, 300))
+        self.setWindowTitle("QFortune")
         self.setWindowIcon(QIcon.fromTheme("qfortune"))
         self.resize(size)
         #self.move(pos)
