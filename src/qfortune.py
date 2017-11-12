@@ -6,7 +6,7 @@ import gettext
 
 from PyQt5.QtCore import (QFile, QFileInfo, QPoint, QRect, QSettings, QSize,
                           Qt, QTextStream, QT_VERSION_STR)
-from PyQt5.QtGui import QIcon, QKeySequence, QFont
+from PyQt5.QtGui import QIcon, QKeySequence, QFont, QClipboard
 from PyQt5.QtWidgets import (QWidget, QAction, QApplication,
                              QFileDialog, QMainWindow, QLabel, QLineEdit,
                              QTabWidget, QGridLayout, QVBoxLayout,
@@ -18,7 +18,29 @@ DESCRIPTION = "A pyQt5 interface for reading fortune cookies"
 VERSION = "0.3a"
 AUTHOR = "Manuel Domínguez López"  # See AUTHORS file
 MAIL = "mdomlop@gmail.com"
+SOURCE = "https://github.com/mdomlop/qfortune"
 LICENSE = "GPLv3+"  # Read LICENSE file.
+
+COPYRIGHT = '''
+Copyright: 2017 Manuel Domínguez López <mdomlop@gmail.com>
+License: GPL-3.0+
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <https://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
+'''
 
 fortunes = "/usr/share/qfortune/fortunes"
 fortunes_off = "/usr/share/qfortune/fortunes/off"
@@ -47,6 +69,12 @@ class MainWindow(QMainWindow):
         random.shuffle(self.elist)
         self.cookie = 'unix'
 
+        self.statusIndex = QLabel('índice')
+        self.statusOrigin = QLabel('from')
+        self.statusOffensive = QLabel('ofensivo')
+        self.statusSaved = QLabel('guadado')
+        self.statusCopied = QLabel('copiado')
+
         self.index = -1
 
         self.textEdit = QTextEdit()
@@ -57,7 +85,8 @@ class MainWindow(QMainWindow):
         self.createMenus()
         self.createToolBars()
         self.createStatusBar()
-        self.nextCookie()
+
+        self.nextCookie()  # Starts showing a cookie
 
         self.readSettings()
 
@@ -142,34 +171,33 @@ class MainWindow(QMainWindow):
                 sys.exit()
             f.close()
             self.saved.append(self.cookie)
-            self.saveAct.setEnabled(False)
-            self.updateInterface()
+        self.updateInterface()
 
     def copyCookie(self):
         self.textEdit.selectAll()
         self.textEdit.copy()
         self.textEdit.clearFocus()
+        self.updateInterface()
 
     def about(self):
         aboutdialog.show()
 
-    def setTitle(self):
-        title = _("QFortune:") + " " \
-                + str(self.index + 1) + self.isOffensive()[2]\
-                + self.isSaved()[2]
-        self.setWindowTitle(title)
-
     def isSaved(self):
         ''' Returns status, text and abbreviation '''
         if self.cookie in self.saved:
-            return((False, _("[Saved]"), _("s")))
-        return((True, _("[Unsaved]"), ""))
+            return((False, _(" | Saved"), _("s")))
+        return((True, _("Unsaved"), ""))
 
     def isOffensive(self):
         ''' Returns status, text and abbreviation '''
         if self.epigrams[self.elist[self.index]][2]:
-            return((True, _("(Offensive)"), _("o")))
-        return((False, _(" "), ""))
+            return((True, _("Offensive"), _("o")))
+        return((False, "", ""))
+
+    def isCopied(self):
+        if QApplication.clipboard().text() == self.cookie:
+            return((True, _("Copied"), _("c")))
+        return((False, "", ""))
 
     def isFirst(self):
         if self.index == 0:
@@ -188,26 +216,42 @@ class MainWindow(QMainWindow):
         self.lastAct.setEnabled(not self.isLast())
         self.nextAct.setEnabled(not self.isLast())
 
-        self.saveAct.setEnabled(self.isSaved()[0])  # False if saved
+        self.copyAct.setEnabled(not self.isCopied()[0])
+        self.saveAct.setEnabled(self.isSaved()[0])
+
+        self.updateTitle()
         self.updateStatus()
+
+    def updateTitle(self):
+        text = _("QFortune:") + " " \
+                + str(self.index + 1) + self.isOffensive()[2]\
+                + self.isSaved()[2]\
+                + self.isCopied()[2]
+        self.setWindowTitle(text)
 
     def updateStatus(self):
         path = self.epigrams[self.elist[self.index]][1]
-        m = str(self.index + 1) + _("/") + str(self.nepigrams) + ' | '\
-            + _("From: ") + os.path.basename(path) + ' '\
-            + self.isOffensive()[1] + ' '\
-            + self.isSaved()[1]
-        self.textEdit.setStatusTip(m)
+        index = str(self.index + 1) + _("/") + str(self.nepigrams)
+        origin = _("From: ") + os.path.basename(path)
+        offensive = self.isOffensive()[1]
+        saved = self.isSaved()[1]
+        copied = self.isCopied()[1]
+        text = " ".join((index, origin, offensive, saved, copied))
+        #self.textEdit.setStatusTip(text)
+        #self.textEdit.setToolTip(text)
+        #self.statusBar().showMessage(text)
+        self.statusIndex.setText(index)
+        self.statusOrigin.setText(origin)
+        self.statusOffensive.setText(offensive)
+        self.statusSaved.setText(saved)
+        self.statusCopied.setText(copied)
 
     def showCookie(self):
         if len(self.elist) == 0:
             noCookiesDialog()
         self.cookie = self.epigrams[self.elist[self.index]][0]
-
         self.textEdit.setText(self.cookie)
         self.updateInterface()
-        self.setTitle()
-        self.updateStatus()
 
     def createActions(self):
         self.firstAct = QAction(QIcon.fromTheme('go-first'),
@@ -244,7 +288,7 @@ class MainWindow(QMainWindow):
                                statusTip=_("Exit the application"),
                                triggered=self.close)
 
-        self.copyCookieAct = QAction(QIcon.fromTheme('edit-copy'),
+        self.copyAct = QAction(QIcon.fromTheme('edit-copy'),
                                _("&Copy"),
                                self, shortcut=QKeySequence.Copy,
                                statusTip=_("Copy cookie to the clipboard"),
@@ -262,12 +306,12 @@ class MainWindow(QMainWindow):
                                               " the Qt library"),
                                   triggered=QApplication.instance().aboutQt)
 
-        #self.copyCookieAct.setEnabled(False)
-        #self.textEdit.copyAvailable.connect(self.copyCookieAct.setEnabled)
+        #self.copyAct.setEnabled(False)
+        #self.textEdit.copyAvailable.connect(self.copyAct.setEnabled)
 
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu(_("&File"))
-        self.fileMenu.addAction(self.copyCookieAct)
+        self.fileMenu.addAction(self.copyAct)
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
@@ -291,12 +335,17 @@ class MainWindow(QMainWindow):
 
         self.editToolBar = self.addToolBar(_("Navigation"))
         self.editToolBar.addAction(self.saveAct)
-        self.editToolBar.addAction(self.copyCookieAct)
+        self.editToolBar.addAction(self.copyAct)
 
     def createStatusBar(self, message=None):
         if not message:
             message = str(self.nepigrams)
-        self.statusBar().showMessage(message)
+        #self.statusBar().showMessage(message)
+        self.statusBar().addWidget(self.statusIndex)
+        self.statusBar().addWidget(self.statusOrigin)
+        self.statusBar().addWidget(self.statusOffensive)
+        self.statusBar().addWidget(self.statusSaved)
+        self.statusBar().addWidget(self.statusCopied)
 
     def readSettings(self):
         settings = QSettings("QFortune", _("Settings"))
@@ -352,11 +401,15 @@ class AboutTab(QWidget):
 
         blank = QLabel()
         description = QLabel("A pyQt5 interface for reading fortune cookies")
-        copyright = QLabel("© 2017, Manuel Domínguez López")
-        source = QLabel("<a href='https://github.com/mdomlop/qfortune'>"
-                        "github</a>")
-        license = QLabel("<a href='https://www.gnu.org/licenses/"
-                         "gpl-3.0.en.html'>GPLv3+</a>")
+        copyright = QLabel("© 2017, " + AUTHOR)
+        source = QLabel(_("Source: ")
+                        + "<a href='" + SOURCE + "'>" + SOURCE +"</a>")
+        license = QLabel(_("License: ")
+                         + "<a href='https://www.gnu.org/licenses/"
+                         "gpl-3.0.en.html'>"
+                         + _("GNU General Public License, version 3") + "</a>")
+
+        source.setTextInteractionFlags(Qt.TextBrowserInteraction)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(blank)
@@ -365,6 +418,7 @@ class AboutTab(QWidget):
         mainLayout.addWidget(description)
         mainLayout.addWidget(blank)
         mainLayout.addWidget(copyright)
+        mainLayout.addWidget(source)
         mainLayout.addWidget(license)
         mainLayout.addStretch()
         self.setLayout(mainLayout)
@@ -374,7 +428,7 @@ class VersionTab(QWidget):
     def __init__(self, parent=None):
         super(VersionTab, self).__init__(parent)
 
-        version = QLabel("<b>Version 0.1a<b>")
+        version = QLabel("<b>Version " + VERSION + "<b>")
         using = QLabel("Usando:")
         pyver = ".".join((
             str(sys.version_info[0]),
