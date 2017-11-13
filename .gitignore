@@ -7,8 +7,8 @@
 *.pot
 *.tgz
 *.rpm
-po/*.po
-po/*.pot
+./po/*.mo
+./po/*.pot
 
 # Debian
 *.deb

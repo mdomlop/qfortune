@@ -1,0 +1,219 @@
+# Copyright (C) 2017 Manuel Domínguez López
+#
+# Manuel Domínguez López <mdomlop@gmail.com>, 2017.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2017-11-12 13:55+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: src/qfortune.py:21
+msgid "A pyQt5 interface for reading fortune cookies"
+msgstr "Una interfaz en pyQt5 para leer galletas de la fortuna"
+
+#: src/qfortune.py:128
+msgid "is not a regular file."
+msgstr "no es un archivo regular."
+
+#: src/qfortune.py:200
+msgid "Saved"
+msgstr "Guardado"
+
+#: src/qfortune.py:201
+msgid "Unsaved"
+msgstr "No guardado"
+
+#: src/qfortune.py:206
+msgid "Offensive"
+msgstr "Ofensivo"
+
+#: src/qfortune.py:211
+msgid "Copied"
+msgstr "Copiado"
+
+#: src/qfortune.py:226
+msgid "From:"
+msgstr "Desde:"
+
+#: src/qfortune.py:257
+msgid "&First"
+msgstr "&Primera"
+
+#: src/qfortune.py:259
+msgid "Show first cookie"
+msgstr "Muestra la primera galleta"
+
+#: src/qfortune.py:263
+msgid "&Last"
+msgstr "&Última"
+
+#: src/qfortune.py:265
+msgid "Show last cookie"
+msgstr "Muestra la última galleta"
+
+#: src/qfortune.py:269
+msgid "&Next"
+msgstr "&Siguiente"
+
+#: src/qfortune.py:271
+msgid "Show next cookie"
+msgstr "Muestra la galleta siguiente"
+
+#: src/qfortune.py:275
+msgid "&Previous"
+msgstr "&Anterior"
+
+#: src/qfortune.py:277
+msgid "Show previous cookie"
+msgstr "Muestra la galleta anterior"
+
+#: src/qfortune.py:280
+msgid "&Save"
+msgstr "&Guardar"
+
+#: src/qfortune.py:282
+msgid "Save cookie to favorites"
+msgstr "Guarda la galleta en favoritos"
+
+#: src/qfortune.py:285
+msgid "E&xit"
+msgstr "&Salir"
+
+#: src/qfortune.py:287
+msgid "Exit the application"
+msgstr "Sale de la aplicación"
+
+#: src/qfortune.py:291
+msgid "&Copy"
+msgstr "&Copiar"
+
+#: src/qfortune.py:293
+msgid "Copy cookie to the clipboard"
+msgstr "Copia la galleta al portapapeles"
+
+#: src/qfortune.py:297
+msgid "&About"
+msgstr "&Acerca de"
+
+#: src/qfortune.py:298
+msgid "Information about this application"
+msgstr "Información acerca de esta aplicación"
+
+#: src/qfortune.py:303
+msgid "About &Qt"
+msgstr "Acerca de &Qt"
+
+#: src/qfortune.py:304
+msgid "Show information about the Qt library"
+msgstr "Muestra información acerca de la biblioteca Qt"
+
+#: src/qfortune.py:309
+msgid "&File"
+msgstr "&Archivo"
+
+#: src/qfortune.py:315
+msgid "&Navigation"
+msgstr "&Navegación"
+
+#: src/qfortune.py:321
+msgid "&Help"
+msgstr "&Ayuda"
+
+#: src/qfortune.py:326
+msgid "File"
+msgstr "Archivo"
+
+#: src/qfortune.py:333
+msgid "Navigation"
+msgstr "Navegación"
+
+#: src/qfortune.py:346
+msgid "Settings"
+msgstr "Configuración"
+
+#: src/qfortune.py:367 src/qfortune.py:388
+msgid "About"
+msgstr "Acerca de"
+
+#: src/qfortune.py:368 src/qfortune.py:425
+msgid "Version"
+msgstr "Versión"
+
+#: src/qfortune.py:369
+msgid "Authors"
+msgstr "Autores"
+
+#: src/qfortune.py:370
+msgid "Thanks"
+msgstr "Agradecimientos"
+
+#: src/qfortune.py:371
+msgid "Translation"
+msgstr "Traducción"
+
+#: src/qfortune.py:369
+msgid "Close"
+msgstr "Cerrar"
+
+#: src/qfortune.py:375
+msgid "Close this window"
+msgstr "Cerrar esta ventana"
+
+#: src/qfortune.py:399
+msgid "Source:"
+msgstr "Código fuente:"
+
+#: src/qfortune.py:401
+msgid "License:"
+msgstr "Licencia:"
+
+#: src/qfortune.py:404
+msgid "GNU General Public License, version 3"
+msgstr "Licencia pública general de GNU, versión 3"
+
+#: src/qfortune.py:426
+msgid "Using:"
+msgstr "Usando:"
+
+#: src/qfortune.py:448
+msgid "Mail me if you found bugs."
+msgstr "Escríbeme un correo si encuentras algún fallo."
+
+#: src/qfortune.py:450
+msgid "Principle author"
+msgstr "Autor principal"
+
+#: src/qfortune.py:468
+msgid "Thank you for using my program."
+msgstr "Gracias por usar mi programa."
+
+#: src/qfortune.py:482
+msgid "Please, mail me if you want to"
+msgstr "Por favor, escríbeme un correo si quieres"
+
+#: src/qfortune.py:483
+msgid "improve the translation."
+msgstr "mejorar la traducción."
+
+#: src/qfortune.py:485
+msgid "Spanish and english translation"
+msgstr "Traducción al español y al inglés"
+
+msgid "Warning"
+msgstr "Advertencia"
+
+msgid "I can not create the directory"
+msgstr "No puedo crear el directorio"
+
+msgid "I have not permission to write the file"
+msgstr "No tengo permisos para escribir en el archivo"
+
+msgid "I can not write the file"
+msgstr "No puedo escribir en el archivo"
