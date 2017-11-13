@@ -61,14 +61,12 @@ class MainWindow(QMainWindow):
         self.elist = list(self.epigrams.keys())
         self.nepigrams = len(self.elist)
         random.shuffle(self.elist)
-        self.cookie = 'unix'
 
-        self.statusOrigin = QLabel('from')
-        self.statusOffensive = QLabel('ofensivo')
-        self.statusSaved = QLabel('guadado')
-        self.statusCopied = QLabel('copiado')
+        self.statusOrigin = QLabel()
+        self.statusOffensive = QLabel()
+        self.statusSaved = QLabel()
+        self.statusCopied = QLabel()
 
-        self.labelGoTo = QLabel("Go to")
         self.comboGoTo = QComboBox()
         for i in range(self.nepigrams):
             self.comboGoTo.addItem(str(i + 1))
@@ -148,7 +146,7 @@ class MainWindow(QMainWindow):
 
     def goToComboIndex(self):
         i = self.comboGoTo.currentIndex()
-        if i > 0 and i < self.nepigrams:
+        if i >= 0 and i < self.nepigrams:
             self.index = i
         self.showCookie()
 
