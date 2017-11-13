@@ -19,7 +19,7 @@ gettext.translation("qfortune", localedir="/usr/share/locale",
                     fallback=True).install()
 
 DESCRIPTION = _("A pyQt5 interface for reading fortune cookies")
-VERSION = "0.4a"
+VERSION = "0.5a"
 AUTHOR = "Manuel Domínguez López"  # See AUTHORS file
 MAIL = "mdomlop@gmail.com"
 SOURCE = "https://github.com/mdomlop/qfortune"
@@ -45,9 +45,6 @@ License: GPL-3.0+
  On Debian systems, the complete text of the GNU General
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 '''
-
-savefile = os.path.join(os.getenv("HOME"), ".config/"
-                        + EXECUTABLE_NAME + "/favorites.cookies")
 
 
 class MainWindow(QMainWindow):
@@ -150,7 +147,9 @@ class MainWindow(QMainWindow):
             self.statics.update({path: (n, decode)})
 
     def goToComboIndex(self):
-        self.index = self.comboGoTo.currentIndex()
+        i = self.comboGoTo.currentIndex()
+        if i > 0 and i < self.nepigrams:
+            self.index = i
         self.showCookie()
 
     def firstCookie(self):
@@ -175,16 +174,29 @@ class MainWindow(QMainWindow):
 
     def saveCookie(self):
         formatcookie = self.cookie + "\n%\n"
+        savename = "favorites.cookies"
+        savebase = os.path.join(os.getenv("HOME"), ".config", EXECUTABLE_NAME)
+        savefile = os.path.join(savebase, savename)
         if self.cookie not in self.saved:
+            try:
+                os.makedirs(savebase, exist_ok=True)
+            except:
+                QMessageBox.warning(self, _("Warning"),
+                                    _("I can not create the directory"))
+                return(1)
             try:
                 with open(savefile, 'a') as f:
                     f.write(formatcookie)
             except PermissionError:
-                print('PermissionError at save')
-                sys.exit()
+                QMessageBox.warning(self, _("Warning"),
+                                    _("I have no permission to write the file"))
+                f.close()
+                return(1)
             except:
-                print('Exception at save')
-                sys.exit()
+                QMessageBox.warning(self, _("Warning"),
+                                    _("I can not write the file"))
+                f.close()
+                return(1)
             f.close()
             self.saved.append(self.cookie)
         self.updateInterface()
