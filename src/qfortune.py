@@ -13,11 +13,11 @@ from PyQt5.QtWidgets import (QWidget, QAction, QApplication, QComboBox,
                              QHBoxLayout, QMessageBox, QTextEdit, QPushButton)
 
 PROGRAM_NAME = "QFortune"
+EXECUTABLE_NAME = "qfortune"
 
-gettext.translation(PROGRAM_NAME, localedir="/usr/share/locale",
+gettext.translation("qfortune", localedir="/usr/share/locale",
                     fallback=True).install()
 
-EXECUTABLE_NAME = "qfortune"
 DESCRIPTION = _("A pyQt5 interface for reading fortune cookies")
 VERSION = "0.4a"
 AUTHOR = "Manuel Domínguez López"  # See AUTHORS file
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
 
     def updateStatus(self):
         path = self.epigrams[self.elist[self.index]][1]
-        origin = _("From: ") + os.path.basename(path)
+        origin = _("From:") + " " + os.path.basename(path)
         offensive = self.isOffensive()[1]
         saved = self.isSaved()[1]
         copied = self.isCopied()[1]
@@ -370,7 +370,7 @@ class AboutDialog(QWidget):
         tabWidget.addTab(ThanksTab(), _("Thanks"))
         tabWidget.addTab(TranslationTab(), _("Translation"))
 
-        btn = QPushButton("Close", self)
+        btn = QPushButton(_("Close"), self)
         btn.setIcon(QIcon.fromTheme("window-close"))
         btn.setToolTip(_("Close this window"))
         btn.clicked.connect(self.close)
@@ -498,6 +498,7 @@ class TranslationTab(QWidget):
 if __name__ == '__main__':
 
     import sys
+
 
     app = QApplication(sys.argv)
     mainWin = MainWindow()
