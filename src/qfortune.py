@@ -258,7 +258,7 @@ class MainWindow(QMainWindow):
 
         self.updateStatus()
 
-    def noCookies():
+    def noCookies(self):
             QMessageBox.critical(self, _("Critical error"),
                                  _("There is no cookies!"))
             return(1)
