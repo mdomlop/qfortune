@@ -4,11 +4,11 @@ import os
 import random
 import gettext
 
-from PyQt5.QtCore import (QFile, QFileInfo, QPoint, QRect, QSettings, QSize,
-                          Qt, QTextStream, QT_VERSION_STR)
-from PyQt5.QtGui import QIcon, QKeySequence, QFont, QClipboard
+from PyQt5.QtCore import (QSettings, QSize,
+                          Qt, QT_VERSION_STR)
+from PyQt5.QtGui import QIcon, QKeySequence, QFont
 from PyQt5.QtWidgets import (QWidget, QAction, QApplication, QComboBox,
-                             QFileDialog, QMainWindow, QLabel, QLineEdit,
+                             QMainWindow, QLabel,
                              QTabWidget, QGridLayout, QVBoxLayout,
                              QHBoxLayout, QMessageBox, QTextEdit, QPushButton)
 
@@ -102,7 +102,6 @@ class MainWindow(QMainWindow):
                                        ".config/" + EXECUTABLE_NAME
                                        + "/fortunes")
         fortunes = [app_fortunes, custom_fortunes]
-        search_in = {}
 
         for base in fortunes:
             if os.path.isdir(base):
@@ -259,9 +258,14 @@ class MainWindow(QMainWindow):
 
         self.updateStatus()
 
+    def noCookies():
+            QMessageBox.critical(self, _("Critical error"),
+                                 _("There is no cookies!"))
+            return(1)
+
     def showCookie(self):
         if len(self.elist) == 0:
-            noCookiesDialog()
+            self.oCookies()
         self.cookie = self.epigrams[self.elist[self.index]][0]  # 0 is text
         self.textEdit.setText(self.cookie)
         self.updateInterface()
