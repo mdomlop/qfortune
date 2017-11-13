@@ -46,12 +46,6 @@ License: GPL-3.0+
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 '''
 
-fortunes = "/usr/share/" + EXECUTABLE_NAME + "/fortunes"
-fortunes_off = "/usr/share/" + EXECUTABLE_NAME + "/fortunes/off"
-custom_fortunes = os.path.join(os.getenv("HOME"), ".config/"
-                               + EXECUTABLE_NAME + "/fortunes")
-custom_fortunes_off = os.path.join(os.getenv("HOME"), ".config/"
-                                   + EXECUTABLE_NAME + "/fortunes/off")
 savefile = os.path.join(os.getenv("HOME"), ".config/"
                         + EXECUTABLE_NAME + "/favorites.cookies")
 
@@ -64,11 +58,9 @@ class MainWindow(QMainWindow):
         self.elist = []  # Only a list for random access to epigrams dict.
         self.saved = []  # Saved cookies merged from savefile and fortune.
         self.statics = {}
+        self.cookie_files = []  # All cookie files
 
-        self.loadDir(fortunes)
-        self.loadDir(custom_fortunes)
-        self.loadDir(fortunes_off, True)
-        self.loadDir(custom_fortunes_off, True)
+        self.loadDir()
         self.elist = list(self.epigrams.keys())
         self.nepigrams = len(self.elist)
         random.shuffle(self.elist)
@@ -108,42 +100,54 @@ class MainWindow(QMainWindow):
             "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
         return(str.translate(s, rot13))
 
-    def loadDir(self, directory, offensive=False):
-        try:
-            files = os.listdir(directory)
-        except:
-            files = []
+    def loadDir(self):
+        ''' Only returns a list of found cookie files. '''
+        app_fortunes = "/usr/share/" + EXECUTABLE_NAME + "/fortunes"
+        custom_fortunes = os.path.join(os.getenv("HOME"),
+                                       ".config/" + EXECUTABLE_NAME
+                                       + "/fortunes")
+        fortunes = [app_fortunes, custom_fortunes]
+        search_in = {}
 
-        if files:  # Not empty
-            files = list(map(lambda x: os.path.join(directory, x), files))
-        for f in files:  # Loads to epigrams
-            if os.path.isfile(f):
-                if offensive:
-                    self.loadFile(f, True)
-                else:
-                    self.loadFile(f)
-            elif os.path.isdir(f):
-                pass
-            else:
-                print(f, _("is not a regular file."))
+        for base in fortunes:
+            if os.path.isdir(base):
+                try:
+                    langs = os.listdir(base)
+                except:
+                    next  # Skip empty directory
+                for lang in langs:
+                    path = os.path.join(base, lang)
+                    cdir = (path, lang, False)
+                    path = os.path.join(path, 'off')  # Check if offensive
+                    ocdir = (path, lang, True)
 
-    def loadFile(self, path, decode=False):
+                    for i in cdir, ocdir:
+                        try:
+                            l = os.listdir(i[0])
+                        except:
+                            l = []
+                        for f in l:
+                            f = os.path.join(i[0], f)
+                            if os.path.isfile(f):
+                                self.loadFile(f, i[1], i[2])
+
+    def loadFile(self, path, lang, decode):
+        ''' Adds a cookie file to the epigrams DB '''
         n = 0  # Count entries
         try:  # Populate epigrams with a fortune database file
             with open(path, "r") as f:
                 text = f.read()
-
+        except:
+            text = None
+        f.close()
+        if text:
             for line in text.split("\n%\n"):
                 if line:
                     n += 1
                     if decode:
                         line = self.decrypt(line)
-                    self.epigrams.update({line: (line, path, decode)})
-            f.close()
+                    self.epigrams.update({line: (line, path, lang, decode)})
             self.statics.update({path: (n, decode)})
-        except PermissionError:
-            print('PermissionError')
-            self.close()
 
     def goToComboIndex(self):
         self.index = self.comboGoTo.currentIndex()
@@ -202,7 +206,7 @@ class MainWindow(QMainWindow):
 
     def isOffensive(self):
         ''' Returns status, text and abbreviation '''
-        if self.epigrams[self.elist[self.index]][2]:
+        if self.epigrams[self.elist[self.index]][3]:  # 3 is true if offensive
             return((True, _("Offensive")))
         return((False, ""))
 
@@ -222,7 +226,7 @@ class MainWindow(QMainWindow):
         return(False)
 
     def updateStatus(self):
-        path = self.epigrams[self.elist[self.index]][1]
+        path = self.epigrams[self.elist[self.index]][1]  # 1 is path
         origin = _("From:") + " " + os.path.basename(path)
         offensive = self.isOffensive()[1]
         saved = self.isSaved()[1]
@@ -248,7 +252,7 @@ class MainWindow(QMainWindow):
     def showCookie(self):
         if len(self.elist) == 0:
             noCookiesDialog()
-        self.cookie = self.epigrams[self.elist[self.index]][0]
+        self.cookie = self.epigrams[self.elist[self.index]][0]  # 0 is text
         self.textEdit.setText(self.cookie)
         self.updateInterface()
 
@@ -498,7 +502,6 @@ class TranslationTab(QWidget):
 if __name__ == '__main__':
 
     import sys
-
 
     app = QApplication(sys.argv)
     mainWin = MainWindow()
