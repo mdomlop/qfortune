@@ -265,7 +265,7 @@ class MainWindow(QMainWindow):
 
     def showCookie(self):
         if len(self.elist) == 0:
-            self.oCookies()
+            self.noCookies()
         self.cookie = self.epigrams[self.elist[self.index]][0]  # 0 is text
         self.textEdit.setText(self.cookie)
         self.updateInterface()
