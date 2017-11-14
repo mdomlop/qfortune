@@ -8,7 +8,7 @@ from PyQt5.QtCore import (QSettings, QSize,
                           Qt, QT_VERSION_STR)
 from PyQt5.QtGui import QIcon, QKeySequence, QFont
 from PyQt5.QtWidgets import (QWidget, QAction, QApplication, QComboBox,
-                             QMainWindow, QLabel,
+                             QMainWindow, QLabel, QFileDialog,
                              QTabWidget, QGridLayout, QVBoxLayout,
                              QHBoxLayout, QMessageBox, QTextEdit, QPushButton)
 
@@ -53,11 +53,16 @@ class MainWindow(QMainWindow):
 
         self.epigrams = {}  # Database containing all fortune cookies
         self.elist = []  # Only a list for random access to epigrams dict.
-        self.saved = []  # Saved cookies merged from savefile and fortune.
         self.statics = {}
         self.cookie_files = []  # All cookie files
 
+        self.savename = "favorites.cookies"
+        self.savebase = os.path.join(os.getenv("HOME"), ".config",
+                                     EXECUTABLE_NAME)
+        self.savefile = os.path.join(self.savebase, self.savename)
+
         self.loadDir()
+        self.loadFile(self.savefile, None, False, True)  # lang, offensive, saved
         self.elist = list(self.epigrams.keys())
         self.nepigrams = len(self.elist)
         random.shuffle(self.elist)
@@ -122,11 +127,13 @@ class MainWindow(QMainWindow):
                             l = []
                         for f in l:
                             f = os.path.join(i[0], f)
-                            if os.path.isfile(f):
-                                self.loadFile(f, i[1], i[2])
+                            self.loadFile(f, i[1], i[2])
 
-    def loadFile(self, path, lang, decode):
+    def loadFile(self, path, lang=None, offensive=False, saved=False):
         ''' Adds a cookie file to the epigrams DB '''
+        if not os.path.isfile(path):
+            return(1)
+
         n = 0  # Count entries
         try:  # Populate epigrams with a fortune database file
             with open(path, "r") as f:
@@ -138,10 +145,11 @@ class MainWindow(QMainWindow):
             for line in text.split("\n%\n"):
                 if line:
                     n += 1
-                    if decode:
+                    if offensive:
                         line = self.decrypt(line)
-                    self.epigrams.update({line: (line, path, lang, decode)})
-            self.statics.update({path: (n, decode)})
+                    self.epigrams.update({line: [line, path, lang,
+                                                 offensive, saved]})
+            self.statics.update({path: (n, offensive)})
 
     def goToComboIndex(self):
         i = self.comboGoTo.currentIndex()
@@ -171,31 +179,34 @@ class MainWindow(QMainWindow):
 
     def saveCookie(self):
         formatcookie = self.cookie + "\n%\n"
-        savename = "favorites.cookies"
-        savebase = os.path.join(os.getenv("HOME"), ".config", EXECUTABLE_NAME)
-        savefile = os.path.join(savebase, savename)
-        if self.cookie not in self.saved:
+        if not self.epigrams[self.elist[self.index]][4]:  # 4 is true if save
             try:
-                os.makedirs(savebase, exist_ok=True)
+                os.makedirs(self.savebase, exist_ok=True)
             except:
                 QMessageBox.warning(self, _("Warning"),
-                                    _("I can not create the directory"))
+                                    _("I can not create the directory:")
+                                    + " <p><pre>" + self.savebase
+                                    + "</pre>")
                 return(1)
             try:
-                with open(savefile, 'a') as f:
+                with open(self.savefile, 'a') as f:
                     f.write(formatcookie)
             except PermissionError:
                 QMessageBox.warning(self, _("Warning"),
-                                    _("I have no permission to write the file"))
+                                    _("No permission to write the file:")
+                                    + " <p><pre>" + self.savefile
+                                    + "</pre>")
                 f.close()
                 return(1)
             except:
                 QMessageBox.warning(self, _("Warning"),
-                                    _("I can not write the file"))
+                                    _("I can not write the file:")
+                                    + " <p><pre>" + self.savefile
+                                    + "</pre>")
                 f.close()
                 return(1)
             f.close()
-            self.saved.append(self.cookie)
+            self.epigrams[self.elist[self.index]][4] = True
         self.updateInterface()
 
     def copyCookie(self):
@@ -209,7 +220,7 @@ class MainWindow(QMainWindow):
 
     def isSaved(self):
         ''' Returns status, text and abbreviation '''
-        if self.cookie in self.saved:
+        if self.epigrams[self.elist[self.index]][4]:  # 4 is true if save
             return((False, _("Saved")))
         return((True, _("Unsaved")))
 
@@ -259,9 +270,24 @@ class MainWindow(QMainWindow):
         self.updateStatus()
 
     def noCookies(self):
-            QMessageBox.critical(self, _("Critical error"),
-                                 _("There is no cookies!"))
-            return(1)
+        t = _("There is no cookies!")
+        q = _("Do you want to add some ones?")
+        txt = t + "<p>" + q
+        reply = QMessageBox.question(self, _("Question"), txt,
+                                     QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            select = QFileDialog.getOpenFileName(self, 'Open file',
+                                               '/usr/share/games/fortunes')
+            self.loadFile(select[0], None, False, True)  # lang, offensive, saved
+            #self.loadFile('/usr/share/games/fortunes/fortunes', None, False, True)
+            self.elist = list(self.epigrams.keys())
+            self.nepigrams = len(self.elist)
+            random.shuffle(self.elist)
+            for i in range(self.nepigrams):
+                self.comboGoTo.addItem(str(i + 1))
+        else:
+            sys.exit()
 
     def showCookie(self):
         if len(self.elist) == 0:
@@ -323,8 +349,14 @@ class MainWindow(QMainWindow):
                                               " the Qt library"),
                                   triggered=QApplication.instance().aboutQt)
 
+        self.openAct = QAction(QIcon.fromTheme('document-open'),
+                               _("&Open"),
+                               self, shortcut=QKeySequence.Open,
+                               statusTip=_("Open a cookie file"),
+                               triggered=self.loadFile)
     def createMenus(self):
         self.fileMenu = self.menuBar().addMenu(_("&File"))
+        self.fileMenu.addAction(self.openAct)
         self.fileMenu.addAction(self.copyAct)
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addSeparator()
@@ -342,19 +374,18 @@ class MainWindow(QMainWindow):
 
     def createToolBars(self):
         self.fileToolBar = self.addToolBar(_("File"))
-        self.fileToolBar.addAction(self.firstAct)
-        self.fileToolBar.addAction(self.prevAct)
-        self.fileToolBar.addAction(self.nextAct)
-        self.fileToolBar.addAction(self.lastAct)
-        self.fileToolBar.addWidget(self.comboGoTo)
+        self.fileToolBar.addAction(self.openAct)
+        self.fileToolBar.addAction(self.saveAct)
+        self.fileToolBar.addAction(self.copyAct)
 
-        self.editToolBar = self.addToolBar(_("Navigation"))
-        self.editToolBar.addAction(self.saveAct)
-        self.editToolBar.addAction(self.copyAct)
+        self.navToolBar = self.addToolBar(_("Navigation"))
+        self.navToolBar.addAction(self.firstAct)
+        self.navToolBar.addAction(self.prevAct)
+        self.navToolBar.addAction(self.nextAct)
+        self.navToolBar.addAction(self.lastAct)
+        self.navToolBar.addWidget(self.comboGoTo)
 
-    def createStatusBar(self, message=None):
-        if not message:
-            message = str(self.nepigrams)
+    def createStatusBar(self):
         self.statusBar().addWidget(self.statusOrigin, Qt.AlignLeft)
         self.statusBar().addWidget(self.statusOffensive, Qt.AlignRight)
         self.statusBar().addWidget(self.statusSaved, Qt.AlignRight)

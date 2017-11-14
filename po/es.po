@@ -209,11 +209,17 @@ msgstr "Traducción al español y al inglés"
 msgid "Warning"
 msgstr "Advertencia"
 
-msgid "I can not create the directory"
-msgstr "No puedo crear el directorio"
+msgid "I can not create the directory:"
+msgstr "No puedo crear el directorio:"
 
-msgid "I have not permission to write the file"
-msgstr "No tengo permisos para escribir en el archivo"
+msgid "No permission to write the file:"
+msgstr "Sin para escribir en el archivo:"
 
-msgid "I can not write the file"
-msgstr "No puedo escribir en el archivo"
+msgid "I can not write the file:"
+msgstr "No puedo escribir en el archivo:"
+
+msgid "Question"
+msgstr "Pregunta"
+
+msgid "There is no cookies!"
+msgstr "¡No hay galletas!"
